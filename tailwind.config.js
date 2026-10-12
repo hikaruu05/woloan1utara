@@ -56,9 +56,12 @@ export default {
         sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
+        '2xs': '0 1px 2px 0 rgba(46, 25, 6, 0.04)',
+        'xs': '0 1px 3px 0 rgba(46, 25, 6, 0.06)',
         'warm-sm': '0 2px 8px -1px rgba(97, 60, 23, 0.08)',
         'warm-md': '0 8px 24px -4px rgba(97, 60, 23, 0.12)',
         'warm-lg': '0 16px 36px -6px rgba(97, 60, 23, 0.16)',
+        'warm-xl': '0 24px 48px -12px rgba(46, 25, 6, 0.22)',
         'wood-glow': '0 0 25px rgba(186, 141, 82, 0.25)',
       }
     },

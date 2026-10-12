@@ -1,14 +1,6 @@
-import React from "react";
-import {
-  Hammer,
-  Heart,
-  RefreshCw,
-  MapPin,
-  Phone,
-  Mail,
-  GraduationCap,
-} from "lucide-react";
-import { useData } from "../context/DataContext";
+import React from 'react';
+import { Hammer, Heart, RefreshCw, MapPin, Phone, Mail, GraduationCap } from 'lucide-react';
+import { useData } from '../context/DataContext';
 
 interface FooterProps {
   onNavigate: (sectionId: string) => void;
@@ -39,9 +31,8 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenUpload }) => {
             </div>
 
             <p className="text-xs sm:text-sm text-wood-300 leading-relaxed max-w-sm">
-              Sentra industri rumah panggung kayu knockdown tradisional Minahasa
-              yang mendunia, serta wadah pemberdayaan ekonomi kreatif bagi
-              seluruh pelaku UMKM lokal.
+              Sentra industri rumah panggung kayu knockdown tradisional Minahasa yang mendunia, 
+              serta direktori digital berbasis toko bagi seluruh pelaku UMKM warga lokal.
             </p>
 
             <div className="pt-2 flex items-center gap-2 text-xs text-amber-300/90 font-medium">
@@ -58,7 +49,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenUpload }) => {
             <ul className="space-y-2.5 text-xs text-wood-300">
               <li>
                 <button
-                  onClick={() => onNavigate("beranda")}
+                  onClick={() => onNavigate('beranda')}
                   className="hover:text-amber-300 transition-colors"
                 >
                   Beranda Utama
@@ -66,7 +57,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenUpload }) => {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate("profil")}
+                  onClick={() => onNavigate('profil')}
                   className="hover:text-amber-300 transition-colors"
                 >
                   Profil & Visi Misi Kelurahan
@@ -74,23 +65,23 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenUpload }) => {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate("profil")}
+                  onClick={() => onNavigate('speciality')}
                   className="hover:text-amber-300 transition-colors"
                 >
-                  Struktur Aparatur & Kepala Lingkungan
+                  Keistimewaan & Jenis Kayu
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate("speciality")}
+                  onClick={() => onNavigate('kalkulator')}
                   className="hover:text-amber-300 transition-colors"
                 >
-                  Keistimewaan & Jenis Kayu Woloan
+                  Simulasi Biaya Rumah Panggung
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate("kontak")}
+                  onClick={() => onNavigate('kontak')}
                   className="hover:text-amber-300 transition-colors"
                 >
                   Peta Lokasi & Kontak Resmi
@@ -102,39 +93,31 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenUpload }) => {
           {/* Quick Links 2: Direktori Usaha */}
           <div>
             <h4 className="font-serif text-sm font-bold text-white uppercase tracking-wider mb-4">
-              Katalog & Direktori
+              Halaman Khusus
             </h4>
             <ul className="space-y-2.5 text-xs text-wood-300">
               <li>
                 <button
-                  onClick={() => onNavigate("rumah-panggung")}
-                  className="hover:text-amber-300 transition-colors"
+                  onClick={() => onNavigate('katalog-rumah')}
+                  className="hover:text-amber-300 transition-colors text-left font-medium"
                 >
-                  Katalog Rumah Panggung Kayu
+                  🏡 Halaman Katalog Rumah Panggung
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate("umkm")}
-                  className="hover:text-amber-300 transition-colors"
+                  onClick={() => onNavigate('katalog-umkm')}
+                  className="hover:text-amber-300 transition-colors text-left font-medium"
                 >
-                  Etalase Produk UMKM Warga
+                  🛍️ Halaman Direktori Toko UMKM
                 </button>
               </li>
-              <li>
-                <button
-                  onClick={() => onNavigate("kalkulator")}
-                  className="hover:text-amber-300 transition-colors"
-                >
-                  Simulasi Estimasi Biaya Rumah
-                </button>
-              </li>
-              <li>
+              <li className="pt-2">
                 <button
                   onClick={onOpenUpload}
-                  className="text-amber-400 font-semibold hover:text-amber-300 transition-colors"
+                  className="text-amber-400 font-bold hover:text-amber-300 transition-colors"
                 >
-                  + Upload Rumah / UMKM Baru
+                  + Upload Toko / Rumah Baru
                 </button>
               </li>
             </ul>
@@ -172,6 +155,16 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenUpload }) => {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Bottom Credits */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-wood-400">
+          <p>© {new Date().getFullYear()} Pemerintah Kelurahan Woloan Satu Utara, Tomohon Barat.</p>
+          <p className="flex items-center gap-1">
+            <span>Dikembangkan dengan</span>
+            <Heart className="w-3.5 h-3.5 text-amber-500 fill-amber-500 inline" />
+            <span>untuk Pengabdian Mahasiswa KKT 2026</span>
+          </p>
         </div>
       </div>
     </footer>

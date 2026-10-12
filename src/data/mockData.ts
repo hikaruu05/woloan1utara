@@ -1,4 +1,4 @@
-import { RumahPanggung, ProductUMKM, VillageOfficial, VillageStat } from '../types';
+import { RumahPanggung, UMKMStore, VillageOfficial, VillageStat } from '../types';
 
 export const INITIAL_RUMAH_PANGGUNG: RumahPanggung[] = [
   {
@@ -15,6 +15,7 @@ export const INITIAL_RUMAH_PANGGUNG: RumahPanggung[] = [
     craftsmanName: 'Bengkel Kayu "Matuari Indah Woloan"',
     craftsmanPhone: '6281244556677',
     craftsmanAddress: 'Jl. Rurukan Lingkungan II, Kelurahan Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.328333,124.795276',
     description: 'Rumah panggung arsitektur tradisional Minahasa tipe Walewangko dengan tiang balok kayu Aliwowos kokoh tahan gempa. Dilengkapi tangga kembar di fasad depan berukir motif relief khas Minahasa. Kayu telah melalui proses oven dan anti-rayap alami.',
     features: [
       'Kayu Aliwowos & Cempaka Grade Super',
@@ -48,6 +49,7 @@ export const INITIAL_RUMAH_PANGGUNG: RumahPanggung[] = [
     craftsmanName: 'CV. Karya Esa Woloan Timber',
     craftsmanPhone: '6281398765432',
     craftsmanAddress: 'Kompleks Sentra Industri Kayu, Lingkungan I, Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.329100,124.793800',
     description: 'Desain villa panggung kontemporer dua lantai yang sangat digemari investor resort dan perumahan wisata di Bali, Lombok, hingga mancanegara. Lantai dasar multifungsi semi-terbuka dengan tiang ekspos gagah, serta balkon lantai dua berpemandangan panorama alam.',
     features: [
       'Struktur 2 Lantai dengan Tiang Kayu Besi Solid',
@@ -80,6 +82,7 @@ export const INITIAL_RUMAH_PANGGUNG: RumahPanggung[] = [
     craftsmanName: 'Bengkel Kayu "Tou Mu\'ung"',
     craftsmanPhone: '6282188990011',
     craftsmanAddress: 'Lingkungan III, Kelurahan Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.327500,124.796100',
     description: 'Pilihan ideal untuk rumah kebun, homestay asri, atau hunian keluarga berkonsep minimalis tropis. Menghadirkan kesejukan kayu cempaka wasian yang harum alami dengan tata ruang efisien dan pencahayaan matahari optimal.',
     features: [
       'Ukuran Ideal untuk Lahan Sedang',
@@ -110,6 +113,7 @@ export const INITIAL_RUMAH_PANGGUNG: RumahPanggung[] = [
     craftsmanName: 'Sanggar Ukir Kayu Woloan Indah',
     craftsmanPhone: '6285240112233',
     craftsmanAddress: 'Lingkungan IV, Kelurahan Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.326800,124.797200',
     description: 'Gazebo panggung peneduh taman, kafe terbuka, pelengkap villa, atau area santai keluarga. Tiang kayu solid bundar berukir rapi dengan atap sirap kayu / genteng metal yang tahan terhadap cuaca panas dan hujan tropis.',
     features: [
       'Ukiran Khas Ornamen Geometris Minahasa',
@@ -139,6 +143,7 @@ export const INITIAL_RUMAH_PANGGUNG: RumahPanggung[] = [
     craftsmanName: 'Pengrajin Kayu "Lokon View Woodcraft"',
     craftsmanPhone: '6289655443322',
     craftsmanAddress: 'Lingkungan I, Dekat Jalur Agrowisata Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.330200,124.792500',
     description: 'Unit cottage panggung eksklusif yang sangat cocok untuk pengembangan ekowisata, glamping resort, dan penginapan boutique. Dibuat presisi sehingga saat dirakit di lokasi terpencil sekalipun dapat berdiri kuat tanpa alat berat.',
     features: [
       'Konsep Studio Room Terpadu dengan Kamar Mandi Dalam',
@@ -168,6 +173,7 @@ export const INITIAL_RUMAH_PANGGUNG: RumahPanggung[] = [
     craftsmanName: 'Kelompok Pengrajin Bersatu Woloan Satu Utara',
     craftsmanPhone: '628114321789',
     craftsmanAddress: 'Pusat Workshop Kayu Terpadu, Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.328800,124.794400',
     description: 'Mahakarya arsitektur leluhur Minahasa dengan bentang ruang luas tanpa banyak sekat yang membatasi sirkulasi udara. Tiang utama penopang menggunakan kayu besi pilihan berdiameter besar, memberikan kegagahan dan keabadian tempat tinggal hingga lintas generasi.',
     features: [
       'Kayu Pilihan Berumur Tua dengan Pengeringan Maksimal',
@@ -182,111 +188,549 @@ export const INITIAL_RUMAH_PANGGUNG: RumahPanggung[] = [
     isVerified: true,
     isCustomAllowed: true,
     createdAt: '2026-03-22'
+  },
+  {
+    id: 'rp-7',
+    title: 'Rumah Panggung Modern Minimalis Pintu Kaca (6 x 10 m)',
+    type: 'minimalis',
+    dimensions: '6 x 10 Meter',
+    woodTypes: ['Kayu Aliwowos', 'Kayu Cempaka Wasian'],
+    bedrooms: 2,
+    bathrooms: 1,
+    floors: 1,
+    priceEstimated: 'Rp 115.000.000 - Rp 140.000.000',
+    minBudget: 115000000,
+    craftsmanName: 'Bengkel Kayu "Lestari Woloan"',
+    craftsmanPhone: '6281255443322',
+    craftsmanAddress: 'Jl. Utama Woloan 1 Utara, Lingkungan II',
+    mapsUrl: 'https://maps.google.com/?q=1.328100,124.795000',
+    description: 'Konsep modern yang menggabungkan kayu hangat dengan bukaan kaca lebar. Memberikan kesan lapang dan pencahayaan matahari berlimpah, sangat cocok untuk perumahan di perkotaan maupun vila perbukitan.',
+    features: [
+      'Desain Minimalis Kontemporer',
+      'Pintu & Jendela Kaca Alami',
+      'Lantai Kayu Halus Anti Gores',
+      'Garansi Struktur Kayu 3 Tahun'
+    ],
+    imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+    galleryUrls: ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'],
+    isVerified: true,
+    isCustomAllowed: true,
+    createdAt: '2026-03-25'
+  },
+  {
+    id: 'rp-8',
+    title: 'Villa Panggung Etnik Kayu Ulin & Besi (9 x 12 m)',
+    type: 'dua_lantai',
+    dimensions: '9 x 12 Meter',
+    woodTypes: ['Kayu Besi', 'Kayu Cempaka Wasian'],
+    bedrooms: 3,
+    bathrooms: 3,
+    floors: 2,
+    priceEstimated: 'Rp 310.000.000 - Rp 380.000.000',
+    minBudget: 310000000,
+    craftsmanName: 'CV. Mahawu Megah Wood',
+    craftsmanPhone: '6281344221100',
+    craftsmanAddress: 'Lingkungan I, Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.329500,124.794200',
+    description: 'Rumah panggung 2 lantai dengan sentuhan arsitektur etnik Minahasa modern. Bagian bawah dapat difungsikan sebagai ruang keluarga terbuka atau kafe mini santai.',
+    features: [
+      'Struktur Dua Lantai Tahan Gempa',
+      'Balkon Luas View Pegunungan',
+      'Kayu Besi Tua Anti Air & Rayap',
+      'Sistem Knockdown Lengkap Kode Pemasangan'
+    ],
+    imageUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80',
+    galleryUrls: ['https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80'],
+    isVerified: true,
+    isCustomAllowed: true,
+    createdAt: '2026-03-28'
+  },
+  {
+    id: 'rp-9',
+    title: 'Gazebo Paviliun Kayu Segi Enam Hexagonal (5 x 5 m)',
+    type: 'gazebo',
+    dimensions: '5 x 5 Meter',
+    woodTypes: ['Kayu Aliwowos', 'Kayu Cempaka Wasian'],
+    bedrooms: 0,
+    bathrooms: 0,
+    floors: 1,
+    priceEstimated: 'Rp 35.000.000 - Rp 45.000.000',
+    minBudget: 35000000,
+    craftsmanName: 'Bengkel Ukir "Kawanua Sejahtera"',
+    craftsmanPhone: '6285211223344',
+    craftsmanAddress: 'Lingkungan IV, Dekat Lapangan Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.326500,124.796800',
+    description: 'Paviliun gazebo unik berbentuk hexagonal (segi enam) dengan ornamen ukir khas Minahasa. Pilihan tepat untuk restoran, resort, atau tempat kumpul keluarga di pekarangan rumah.',
+    features: [
+      'Bentuk Hexagonal Artistik',
+      'Ukiran Detail Halus di Tiang & Lisplang',
+      'Atap Sirap Kayu Asli / Multi-atap',
+      'Instalasi Mudah Cepat Selesai'
+    ],
+    imageUrl: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80',
+    galleryUrls: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80'],
+    isVerified: true,
+    isCustomAllowed: true,
+    createdAt: '2026-04-01'
+  },
+  {
+    id: 'rp-10',
+    title: 'Rumah Panggung Keluarga Hangat Tipe Walewangko (8 x 10 m)',
+    type: 'tradisional',
+    dimensions: '8 x 10 Meter',
+    woodTypes: ['Kayu Aliwowos', 'Kayu Cempaka Wasian'],
+    bedrooms: 3,
+    bathrooms: 2,
+    floors: 1,
+    priceEstimated: 'Rp 160.000.000 - Rp 195.000.000',
+    minBudget: 160000000,
+    craftsmanName: 'Bengkel Kayu "Tou Mu\'ung"',
+    craftsmanPhone: '6282188990011',
+    craftsmanAddress: 'Lingkungan III, Kelurahan Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.327600,124.795800',
+    description: 'Model rumah panggung paling favorit untuk keluarga inti. Ukuran yang pas untuk tanah perumahan dengan tata ruang 3 kamar tidur, ruang tamu luas, dan teras santai menghadap depan.',
+    features: [
+      'Model Paling Dicari & Teruji',
+      'Kayu Cempaka Wasian Harum Alami',
+      'Tangga Ganda Khas Rumah Minahasa',
+      'Kualitas Ekspor Knockdown'
+    ],
+    imageUrl: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
+    galleryUrls: ['https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80'],
+    isVerified: true,
+    isCustomAllowed: true,
+    createdAt: '2026-04-03'
+  },
+  {
+    id: 'rp-11',
+    title: 'Cottage Glamping Resor Ekowisata (5 x 7 m)',
+    type: 'villa',
+    dimensions: '5 x 7 Meter',
+    woodTypes: ['Kayu Aliwowos', 'Kayu Nantu'],
+    bedrooms: 1,
+    bathrooms: 1,
+    floors: 1,
+    priceEstimated: 'Rp 85.000.000 - Rp 105.000.000',
+    minBudget: 85000000,
+    craftsmanName: 'Pengrajin Kayu "Lokon View Woodcraft"',
+    craftsmanPhone: '6289655443322',
+    craftsmanAddress: 'Lingkungan I, Dekat Jalur Agrowisata Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.330200,124.792500',
+    description: 'Unit mungil namun elegan untuk perhotelan alam, agrowisata, dan glamping. Cepat dipasang, hemat ruang, serta memiliki daya tarik foto yang disukai wisatawan.',
+    features: [
+      'Ukuran Kompak Siap Kirim Peti Kemas',
+      'Kamar Mandi Dalam Terpadu',
+      'Pencahayaan Alami Estetik',
+      'Tahan Cuaca Pegunungan & Lembab'
+    ],
+    imageUrl: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1200&q=80',
+    galleryUrls: ['https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1200&q=80'],
+    isVerified: true,
+    isCustomAllowed: true,
+    createdAt: '2026-04-05'
+  },
+  {
+    id: 'rp-12',
+    title: 'Rumah Kayu Panggung Besar Komunal (12 x 16 m)',
+    type: 'tradisional',
+    dimensions: '12 x 16 Meter',
+    woodTypes: ['Kayu Besi', 'Kayu Aliwowos', 'Kayu Cempaka Wasian'],
+    bedrooms: 5,
+    bathrooms: 4,
+    floors: 1,
+    priceEstimated: 'Rp 450.000.000 - Rp 580.000.000',
+    minBudget: 450000000,
+    craftsmanName: 'Kelompok Pengrajin Bersatu Woloan Satu Utara',
+    craftsmanPhone: '628114321789',
+    craftsmanAddress: 'Pusat Workshop Kayu Terpadu, Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.328800,124.794400',
+    description: 'Mahakarya skala besar untuk rumah keluarga besar, aula serbaguna budaya, kantor perwakilan adat, maupun gedung pertemuan eksklusif bernuansa alam kayu Minahasa.',
+    features: [
+      'Bentang Ruang Sangat Luas Tanpa Sekat Rumit',
+      'Tiang Kayu Besi Berdiameter Jumbo',
+      'Sistem Sirkulasi Udara Silang Alami',
+      'Ketahanan Struktur Jangka Panjang Lintas Generasi'
+    ],
+    imageUrl: 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1200&q=80',
+    galleryUrls: ['https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=1200&q=80'],
+    isVerified: true,
+    isCustomAllowed: true,
+    createdAt: '2026-04-08'
   }
 ];
 
-export const INITIAL_UMKM_PRODUCTS: ProductUMKM[] = [
+export const INITIAL_UMKM_STORES: UMKMStore[] = [
   {
-    id: 'umkm-1',
-    name: 'Miniatur Rumah Panggung Woloan Kayu Cempaka Wasian',
-    category: 'kerajinan',
-    businessName: 'Woloan Souvenir & Miniatures',
+    id: 'store-1',
+    name: 'Woloan Souvenir & Woodcraft Studio',
     ownerName: 'Bpk. Meidy Tangkuman',
-    price: 'Rp 250.000 - Rp 850.000',
-    priceNum: 250000,
-    unit: 'per unit souvenir',
+    category: 'kerajinan',
     phone: '6281299887766',
     address: 'Lingkungan II, Depan Gereja GMIM Woloan 1 Utara',
-    description: 'Souvenir ikonik skala presisi 1:50 dari rumah panggung asli Minahasa. Dibuat tangan secara detail oleh perajin kayu lokal menggunakan sisa kayu cempaka wasian berkualitas. Dilengkapi kotak kemasan mika eksklusif.',
+    mapsUrl: 'https://maps.google.com/?q=1.328333,124.795276',
+    description: 'Pusat kerajinan miniatur rumah panggung Minahasa dan aneka cenderamata kayu cempaka wasian asli. Dibuat presisi oleh perajin kayu lokal dengan kualitas ekspor.',
     imageUrl: 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=800&q=80',
+    badge: 'Sentra Kerajinan Kayu',
     isVerified: true,
-    badge: 'Produk Ikonik Khas',
-    createdAt: '2026-02-20'
+    createdAt: '2026-02-20',
+    products: [
+      {
+        id: 'p-101',
+        name: 'Miniatur Rumah Panggung Walewangko (Skala 1:50)',
+        price: 'Rp 350.000',
+        priceNum: 350000,
+        unit: 'per unit kotak mika',
+        description: 'Miniatur rumah panggung kayu cempaka wasian lengkap dengan tangga kembar dan kotak display mika.',
+        imageUrl: 'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'p-102',
+        name: 'Plakat & Relief Ukir Kayu Motif Burung Manguni',
+        price: 'Rp 220.000',
+        priceNum: 220000,
+        unit: 'per pcs',
+        description: 'Hiasan dinding ukir kayu artistik simbol kearifan suku Minahasa.',
+        imageUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'p-103',
+        name: 'Gantungan Kunci & Asbak Kayu Cempaka Wasian',
+        price: 'Rp 25.000',
+        priceNum: 25000,
+        unit: 'per pcs',
+        description: 'Souvenir ekonomis beraroma harum kayu cempaka khas Woloan.',
+        imageUrl: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
   },
   {
-    id: 'umkm-2',
-    name: 'Klappertaart Asli Tomohon Premium (Kelapa Muda & Kenari)',
-    category: 'kuliner',
-    businessName: 'Dapur Oma Tilly Woloan',
+    id: 'store-2',
+    name: 'Dapur Oma Tilly Woloan',
     ownerName: 'Ibu Mathilda Supit',
-    price: 'Rp 45.000 - Rp 165.000',
-    priceNum: 45000,
-    unit: 'per cup / loyang',
-    phone: '6285397123456',
-    address: 'Lingkungan I, Woloan 1 Utara',
-    description: 'Klappertaart resep turun-temurun dengan tekstur lembut melted, perpaduan kelapa muda segar Tomohon, susu krim gurih, taburan kismis, kacang kenari, dan bubuk kayu manis wangi. Tersedia varian original dan rendah gula.',
-    imageUrl: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=800&q=80',
-    isVerified: true,
-    badge: 'Kuliner Legendaris',
-    createdAt: '2026-02-25'
-  },
-  {
-    id: 'umkm-3',
-    name: 'Set Talenan & Peralatan Dapur Kayu Cempaka Food-Grade',
-    category: 'kerajinan',
-    businessName: 'Woodware Woloan Lestari',
-    ownerName: 'Bpk. Hendra Rorong',
-    price: 'Rp 75.000 - Rp 220.000',
-    priceNum: 75000,
-    unit: 'per set (3 pcs)',
-    phone: '6287812345678',
-    address: 'Lingkungan III, Woloan 1 Utara',
-    description: 'Peralatan dapur alami terbuat dari serat kayu pilihan tanpa bahan kimia berbahaya, di-finishing dengan beeswax alami food-grade. Kuat, tahan jamur, tidak tumpul pada pisau dapur, dan memiliki serat artistik.',
-    imageUrl: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80',
-    isVerified: true,
-    badge: 'Ekspor Kerajinan',
-    createdAt: '2026-03-02'
-  },
-  {
-    id: 'umkm-4',
-    name: 'Kacang Goyang & Halua Kenari Khas Minahasa',
     category: 'kuliner',
-    businessName: 'UD. Rizky Berkah Woloan',
-    ownerName: 'Ibu Fatimah Mokodongan',
-    price: 'Rp 25.000 - Rp 60.000',
-    priceNum: 25000,
-    unit: 'per toples / pack',
-    phone: '6282290123499',
-    address: 'Lingkungan IV, Woloan 1 Utara',
-    description: 'Camilan manis renyah khas Minahasa. Kacang goyang beraneka warna dengan balutan gula legit dan halua kenari asli dengan gula aren Minahasa murni. Cocok untuk oleh-oleh wisatawan dan camilan santai keluarga.',
-    imageUrl: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=800&q=80',
+    phone: '6285397123456',
+    address: 'Lingkungan I, Jl. Siswa Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.329200,124.793500',
+    description: 'Produsen kue tradisional legendaris Tomohon. Terkenal dengan Klappertaart panggang kelapa muda segar bertekstur melted dan aneka kue basah Minahasa.',
+    imageUrl: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=800&q=80',
+    badge: 'Kuliner Legendaris',
     isVerified: true,
-    badge: 'Oleh-Oleh Favorit',
-    createdAt: '2026-03-05'
+    createdAt: '2026-02-25',
+    products: [
+      {
+        id: 'p-201',
+        name: 'Klappertaart Panggang Premium (Almond & Kismis)',
+        price: 'Rp 65.000 - Rp 165.000',
+        priceNum: 65000,
+        unit: 'cup sedang / loyang besar',
+        description: 'Resep turun-temurun kelapa muda pilihan dengan susu, kayu manis wangi, dan taburan kenari panggang.',
+        imageUrl: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'p-202',
+        name: 'Kue Cucur Gula Aren Minahasa Asli',
+        price: 'Rp 30.000',
+        priceNum: 30000,
+        unit: 'isi 10 pcs',
+        description: 'Cucur berserat merekah legit harum dengan gula aren murni Tomohon.',
+        imageUrl: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'p-203',
+        name: 'Apang Coe & Panada Ikan Cakalang Asap',
+        price: 'Rp 35.000',
+        priceNum: 35000,
+        unit: 'isi 8 pcs',
+        description: 'Kue apang manis gurih dipadu dengan panada gurih pedas isi suwiran cakalang.',
+        imageUrl: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
   },
   {
-    id: 'umkm-5',
-    name: 'Kopi Arabika & Robusta Lereng Gunung Lokon Woloan',
-    category: 'pertanian',
-    businessName: 'Kopi Tani Lokon Woloan',
+    id: 'store-3',
+    name: 'Woodware Woloan Lestari',
+    ownerName: 'Bpk. Hendra Rorong',
+    category: 'kerajinan',
+    phone: '6287812345678',
+    address: 'Lingkungan III, Kompleks Pengrajin Kayu, Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.327800,124.795900',
+    description: 'Peralatan makan, talenan, dan perlengkapan dapur premium dari kayu cempaka dan aliwowos food-grade tanpa lapisan kimia beracun.',
+    imageUrl: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80',
+    badge: 'Produk Ekspor',
+    isVerified: true,
+    createdAt: '2026-03-02',
+    products: [
+      {
+        id: 'p-301',
+        name: 'Set Talenan Kayu Cempaka Wasian (3 Pcs Food-Grade)',
+        price: 'Rp 145.000',
+        priceNum: 145000,
+        unit: 'per set isi 3',
+        description: 'Talenan tebal serat artistik, dilapisi beeswax alami tahan jamur dan bakteri.',
+        imageUrl: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'p-302',
+        name: 'Piring, Mangkuk & Sendok Kayu Alami',
+        price: 'Rp 75.000',
+        priceNum: 75000,
+        unit: 'per paket makan',
+        description: 'Peralatan makan estetik yang ramah lingkungan dan aman untuk hidangan panas maupun dingin.',
+        imageUrl: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
+  },
+  {
+    id: 'store-4',
+    name: 'UD. Rizky Berkah Woloan',
+    ownerName: 'Ibu Fatimah Mokodongan',
+    category: 'kuliner',
+    phone: '6282290123499',
+    address: 'Lingkungan IV, Jalur Utama Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.326700,124.797000',
+    description: 'Pusat oleh-oleh camilan khas Minahasa. Spesialis kacang goyang warna-warni renyah dan halua kenari gula aren yang selalu menjadi favorit wisatawan.',
+    imageUrl: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=800&q=80',
+    badge: 'Oleh-Oleh Favorit',
+    isVerified: true,
+    createdAt: '2026-03-05',
+    products: [
+      {
+        id: 'p-401',
+        name: 'Kacang Goyang Tomohon Manis Gurih Renyah',
+        price: 'Rp 30.000',
+        priceNum: 30000,
+        unit: 'toples 400 gram',
+        description: 'Kacang tanah pilihan dilapisi karamel gula bertekstur krispi.',
+        imageUrl: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'p-402',
+        name: 'Halua Kenari Asli Gula Aren Minahasa',
+        price: 'Rp 45.000',
+        priceNum: 45000,
+        unit: 'pack 300 gram',
+        description: 'Kacang kenari hutan berpadu dengan manis legit gula aren murni.',
+        imageUrl: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
+  },
+  {
+    id: 'store-5',
+    name: 'Kopi Tani Lokon Woloan',
     ownerName: 'Bpk. Joutje Polii',
-    price: 'Rp 50.000 - Rp 110.000',
-    priceNum: 50000,
-    unit: 'kemasan 250gr',
+    category: 'pertanian',
     phone: '6281356789012',
     address: 'Jalur Perkebunan Kaki Lokon, Lingkungan I, Woloan 1 Utara',
-    description: 'Biji kopi yang ditanam di tanah vulkanik subur lereng Gunung Lokon pada ketinggian 900-1100 mdpl. Menghasilkan cita rasa kopi dengan acidity seimbang, aroma cokelat rempah, dan body yang tebal khas pegunungan Tomohon.',
+    mapsUrl: 'https://maps.google.com/?q=1.330500,124.792100',
+    description: 'Kelompok tani kopi lereng Gunung Lokon di ketinggian 900-1100 mdpl. Menghasilkan biji kopi arabika & robusta dengan aroma rempah dan acidity yang seimbang.',
     imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80',
-    isVerified: true,
     badge: 'Petik Merah Pilihan',
-    createdAt: '2026-03-12'
+    isVerified: true,
+    createdAt: '2026-03-12',
+    products: [
+      {
+        id: 'p-501',
+        name: 'Kopi Arabika Gunung Lokon Single Origin (Roast Medium)',
+        price: 'Rp 65.000',
+        priceNum: 65000,
+        unit: 'pouch 250 gram',
+        description: 'Kopi arabika tanah vulkanik dengan notes dark chocolate, fruity, dan aroma bunga.',
+        imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'p-502',
+        name: 'Kopi Robusta Tradisional Tomohon (Dark Roast)',
+        price: 'Rp 40.000',
+        priceNum: 40000,
+        unit: 'pouch 250 gram',
+        description: 'Kopi kental berkarakter tegas, sangat cocok untuk kopi susu atau kopi tubruk tradisional.',
+        imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
   },
   {
-    id: 'umkm-6',
-    name: 'Bunga Krisan Potong & Tanaman Hias Unggulan Tomohon',
-    category: 'pertanian',
-    businessName: 'Flora Asri Woloan Satu Utara',
+    id: 'store-6',
+    name: 'Flora Asri Woloan Satu Utara',
     ownerName: 'Kelompok Wanita Tani (KWT) Woloan',
-    price: 'Rp 35.000 - Rp 150.000',
-    priceNum: 35000,
-    unit: 'per ikat / pot',
+    category: 'pertanian',
     phone: '6285298112244',
     address: 'Greenhouse Bunga Lingkungan II, Woloan 1 Utara',
-    description: 'Tomohon dikenal sebagai Kota Bunga, dan Woloan 1 Utara turut membudidayakan krisan segar, anggrek, dan tanaman hias bernilai ekonomi tinggi untuk dekorasi pesta, event Kota Bunga TIFF, hingga hiasan pekarangan rumah.',
+    mapsUrl: 'https://maps.google.com/?q=1.328600,124.794900',
+    description: 'Budidaya bunga krisan potong, anggrek, dan aneka tanaman hias dataran tinggi khas Kota Bunga Tomohon untuk hiasan rumah, pesta, dan acara resmi.',
     imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80',
-    isVerified: true,
     badge: 'Segar dari Kebun',
-    createdAt: '2026-03-19'
+    isVerified: true,
+    createdAt: '2026-03-19',
+    products: [
+      {
+        id: 'p-601',
+        name: 'Bunga Krisan Potong Aneka Warna (Kuning, Putih, Ungu)',
+        price: 'Rp 35.000',
+        priceNum: 35000,
+        unit: 'ikat (10 tangkai)',
+        description: 'Krisan segar petik langsung dari greenhouse berhawa sejuk Woloan.',
+        imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80'
+      },
+      {
+        id: 'p-602',
+        name: 'Tanaman Hias Pot Pegunungan Tomohon',
+        price: 'Rp 50.000 - Rp 150.000',
+        priceNum: 50000,
+        unit: 'per pot',
+        description: 'Tanaman hias daun rimbun penyejuk teras rumah panggung Anda.',
+        imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
+  },
+  {
+    id: 'store-7',
+    name: 'Bake & Cake Mama Grace Woloan',
+    ownerName: 'Ibu Grace Pontoh',
+    category: 'kuliner',
+    phone: '6281344889900',
+    address: 'Lingkungan III, Dekat Polindes Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.327400,124.796300',
+    description: 'Toko roti dan kue rumahan yang memproduksi klappertaart mini, bagea kenari, dan roti sobek mentega khas Tomohon.',
+    imageUrl: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=800&q=80',
+    badge: 'Kue Rumahan Hangat',
+    isVerified: true,
+    createdAt: '2026-03-22',
+    products: [
+      {
+        id: 'p-701',
+        name: 'Bagea Kenari Krispi Gula Aren',
+        price: 'Rp 28.000',
+        priceNum: 28000,
+        unit: 'kemasan toples',
+        description: 'Kue kering tradisional sagu kenari yang lumer di mulut saat dinikmati bersama teh hangat.',
+        imageUrl: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
+  },
+  {
+    id: 'store-8',
+    name: 'Sanggar Ukir Tou Mu\'ung Art',
+    ownerName: 'Bpk. Ferry Runtuwene',
+    category: 'kerajinan',
+    phone: '6282199001122',
+    address: 'Lingkungan I, Kompleks Seniman Kayu Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.329800,124.793200',
+    description: 'Sanggar pembuat ukiran ornamen tradisional Minahasa, lisplang rumah panggung pesanan khusus, dan lambang adat.',
+    imageUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80',
+    badge: 'Ukir Ornamen Tradisional',
+    isVerified: true,
+    createdAt: '2026-03-24',
+    products: [
+      {
+        id: 'p-801',
+        name: 'Lisplang Ukir Kayu Cempaka Motif Tumpal (Per Meter)',
+        price: 'Rp 120.000',
+        priceNum: 120000,
+        unit: 'per meter lari',
+        description: 'Ornamen penghias atap rumah panggung dengan ukiran khas leluhur Minahasa.',
+        imageUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
+  },
+  {
+    id: 'store-9',
+    name: 'Sayur Segar Organik Kaki Lokon',
+    ownerName: 'Bpk. Robby Poluan',
+    category: 'pertanian',
+    phone: '6285244332211',
+    address: 'Lingkungan II, Dekat Perkebunan Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.328900,124.794600',
+    description: 'Menyediakan sayur mayur dataran tinggi tanpa pestisida: wortel manis, kubis segar, daun bawang, dan labu siam langsung dari petani.',
+    imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80',
+    badge: '100% Organik',
+    isVerified: true,
+    createdAt: '2026-03-27',
+    products: [
+      {
+        id: 'p-901',
+        name: 'Paket Sayuran Segar Sup Brenebon & Tinutuan',
+        price: 'Rp 35.000',
+        priceNum: 35000,
+        unit: 'per keranjang paket',
+        description: 'Bahan lengkap sayuran segar khas masakan Minahasa.',
+        imageUrl: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
+  },
+  {
+    id: 'store-10',
+    name: 'Jasa Montir & Finishing Kayu Panggung Woloan',
+    ownerName: 'Bpk. Steven Kojongian',
+    category: 'jasa',
+    phone: '6281233445566',
+    address: 'Lingkungan III, Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.327900,124.795500',
+    description: 'Layanan jasa tukang kayu profesional untuk perakitan rumah knockdown ke seluruh Indonesia, pernis ulang finishing kayu, dan perbaikan atap.',
+    imageUrl: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80',
+    badge: 'Tukang Ahli Berpengalaman',
+    isVerified: true,
+    createdAt: '2026-03-29',
+    products: [
+      {
+        id: 'p-1001',
+        name: 'Jasa Finishing Ulang Wood Coating Anti-Rayap',
+        price: 'Rp 75.000',
+        priceNum: 75000,
+        unit: 'per meter persegi',
+        description: 'Pelapisan kayu ulang dengan bahan ramah lingkungan pelindung jamur dan lumut.',
+        imageUrl: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
+  },
+  {
+    id: 'store-11',
+    name: 'Kopi Tubruk & Kafe Kayu Woloan',
+    ownerName: 'Ibu Novita Supit',
+    category: 'kuliner',
+    phone: '6281355667788',
+    address: 'Lingkungan I, Sudut Panorama Lokon, Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.329700,124.793700',
+    description: 'Kedai kopi khas di teras rumah panggung kayu Woloan. Menyajikan seduhan kopi manual brew dan pisang goreng goroho sambal roa.',
+    imageUrl: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80',
+    badge: 'Kafe View Gunung',
+    isVerified: true,
+    createdAt: '2026-04-01',
+    products: [
+      {
+        id: 'p-1101',
+        name: 'Pisang Goroho Stik Sambal Roa Asap',
+        price: 'Rp 25.000',
+        priceNum: 25000,
+        unit: 'per porsi hangat',
+        description: 'Pisang goroho krispi khas Manado dinikmati dengan cocolan sambal roa pedas gurih.',
+        imageUrl: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
+  },
+  {
+    id: 'store-12',
+    name: 'Bengkel Furniture Kayu Solid Minahasa',
+    ownerName: 'Bpk. Royke Wowor',
+    category: 'kerajinan',
+    phone: '6282244556677',
+    address: 'Lingkungan IV, Kompleks Sentra Kayu Woloan 1 Utara',
+    mapsUrl: 'https://maps.google.com/?q=1.326900,124.796500',
+    description: 'Spesialis pembuatan meja makan kayu utuh (slab table), kursi santai teras rumah panggung, dan lemari antik kayu jati & cempaka.',
+    imageUrl: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80',
+    badge: 'Kayu Utuh Solid',
+    isVerified: true,
+    createdAt: '2026-04-04',
+    products: [
+      {
+        id: 'p-1201',
+        name: 'Meja Makan Kayu Slab Alami (2 x 1 m) + 6 Kursi',
+        price: 'Rp 4.500.000',
+        priceNum: 4500000,
+        unit: 'per set ruang makan',
+        description: 'Meja kayu utuh dengan serat alami menawan pelengkap kehangatan ruang makan rumah panggung.',
+        imageUrl: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?auto=format&fit=crop&w=800&q=80'
+      }
+    ]
   }
 ];
 

@@ -1,4 +1,4 @@
-export type HouseType = 'tradisional' | 'villa' | 'minimalis' | 'gazebo' | 'dua_lantai';
+export type HouseType = 'tradisional' | 'dua_lantai' | 'minimalis' | 'villa' | 'gazebo';
 
 export interface RumahPanggung {
   id: string;
@@ -14,6 +14,7 @@ export interface RumahPanggung {
   craftsmanName: string; // Bengkel / Pembuat
   craftsmanPhone: string; // WhatsApp number
   craftsmanAddress: string; // Lingkungan di Woloan 1 Utara
+  mapsUrl?: string; // Titik lokasi Google Maps
   description: string;
   features: string[];
   imageUrl: string;
@@ -25,23 +26,40 @@ export interface RumahPanggung {
 
 export type UMKMCategory = 'kerajinan' | 'kuliner' | 'pertanian' | 'jasa' | 'lainnya';
 
-export interface ProductUMKM {
+export interface UMKMProductItem {
   id: string;
   name: string;
-  category: UMKMCategory;
-  businessName: string;
-  ownerName: string;
   price: string;
   priceNum: number;
-  unit?: string; // e.g., 'per buah', 'per paket', 'per porsi'
-  phone: string;
-  address: string;
-  description: string;
+  unit?: string; // e.g. 'per pcs', 'per kemasan', 'per porsi'
+  description?: string;
   imageUrl: string;
-  isVerified: boolean;
-  badge?: string;
-  createdAt: string;
 }
+
+export interface UMKMStore {
+  id: string;
+  name: string; // Nama Toko / Usaha
+  ownerName: string; // Nama Pemilik
+  category: UMKMCategory;
+  phone: string; // WhatsApp
+  address: string; // Alamat di Woloan 1 Utara
+  mapsUrl?: string; // Titik Google Maps
+  description: string;
+  imageUrl: string; // Foto Toko / Banner
+  badge?: string;
+  isVerified: boolean;
+  createdAt: string;
+  products: UMKMProductItem[]; // Koleksi produk per toko
+}
+
+// Backward compatibility alias if needed
+export type ProductUMKM = UMKMProductItem & {
+  storeId?: string;
+  storeName?: string;
+  phone?: string;
+  address?: string;
+  mapsUrl?: string;
+};
 
 export interface VillageOfficial {
   name: string;

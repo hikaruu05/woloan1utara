@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { RumahPanggung, ProductUMKM } from '../types';
-import { INITIAL_RUMAH_PANGGUNG, INITIAL_UMKM_PRODUCTS } from '../data/mockData';
+import { RumahPanggung, UMKMStore, UMKMProductItem } from '../types';
+import { INITIAL_RUMAH_PANGGUNG, INITIAL_UMKM_STORES } from '../data/mockData';
 
 interface ToastMessage {
   id: string;
@@ -11,9 +11,10 @@ interface ToastMessage {
 
 interface DataContextType {
   houses: RumahPanggung[];
-  umkmProducts: ProductUMKM[];
+  umkmStores: UMKMStore[];
   addHouse: (house: Omit<RumahPanggung, 'id' | 'createdAt' | 'isVerified'>) => void;
-  addUMKM: (product: Omit<ProductUMKM, 'id' | 'createdAt' | 'isVerified'>) => void;
+  addStore: (store: Omit<UMKMStore, 'id' | 'createdAt' | 'isVerified'>) => void;
+  addProductToStore: (storeId: string, product: Omit<UMKMProductItem, 'id'>) => void;
   resetToDefault: () => void;
   toasts: ToastMessage[];
   removeToast: (id: string) => void;
@@ -22,8 +23,8 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const STORAGE_KEY_HOUSES = 'kkt_woloan_houses_v2';
-const STORAGE_KEY_UMKM = 'kkt_woloan_umkm_v2';
+const STORAGE_KEY_HOUSES = 'kkt_woloan_houses_v3';
+const STORAGE_KEY_STORES = 'kkt_woloan_stores_v3';
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [houses, setHouses] = useState<RumahPanggung[]>(() => {
@@ -36,14 +37,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return INITIAL_RUMAH_PANGGUNG;
   });
 
-  const [umkmProducts, setUmkmProducts] = useState<ProductUMKM[]>(() => {
+  const [umkmStores, setUmkmStores] = useState<UMKMStore[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_UMKM);
+      const saved = localStorage.getItem(STORAGE_KEY_STORES);
       if (saved) return JSON.parse(saved);
     } catch (e) {
-      console.error('Error loading saved umkm:', e);
+      console.error('Error loading saved stores:', e);
     }
-    return INITIAL_UMKM_PRODUCTS;
+    return INITIAL_UMKM_STORES;
   });
 
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -58,11 +59,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_UMKM, JSON.stringify(umkmProducts));
+      localStorage.setItem(STORAGE_KEY_STORES, JSON.stringify(umkmStores));
     } catch (e) {
-      console.error('Error saving umkm to localStorage:', e);
+      console.error('Error saving stores to localStorage:', e);
     }
-  }, [umkmProducts]);
+  }, [umkmStores]);
 
   const showToast = (title: string, message: string, type: 'success' | 'info' | 'error' = 'success') => {
     const id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
@@ -85,30 +86,45 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setHouses((prev) => [newHouse, ...prev]);
     showToast(
-      'Katalog Berhasil Ditambahkan!',
+      'Katalog Rumah Panggung Ditambahkan!',
       `Rumah panggung "${newHouse.title}" kini telah terdaftar dan tampil di etalase Woloan 1 Utara.`
     );
   };
 
-  const addUMKM = (umkmData: Omit<ProductUMKM, 'id' | 'createdAt' | 'isVerified'>) => {
-    const newProduct: ProductUMKM = {
-      ...umkmData,
-      id: 'umkm-user-' + Date.now(),
+  const addStore = (storeData: Omit<UMKMStore, 'id' | 'createdAt' | 'isVerified'>) => {
+    const newStore: UMKMStore = {
+      ...storeData,
+      id: 'store-user-' + Date.now(),
       isVerified: false,
       createdAt: new Date().toISOString().split('T')[0]
     };
-    setUmkmProducts((prev) => [newProduct, ...prev]);
+    setUmkmStores((prev) => [newStore, ...prev]);
     showToast(
-      'Produk UMKM Terdaftar!',
-      `Produk "${newProduct.name}" dari "${newProduct.businessName}" kini dapat diakses oleh calon pembeli.`
+      'Toko UMKM Berhasil Didaftarkan!',
+      `Usaha "${newStore.name}" oleh ${newStore.ownerName} beserta katalog produknya telah aktif di portal.`
     );
+  };
+
+  const addProductToStore = (storeId: string, productData: Omit<UMKMProductItem, 'id'>) => {
+    const newProduct: UMKMProductItem = {
+      ...productData,
+      id: 'prod-user-' + Date.now()
+    };
+    setUmkmStores((prev) =>
+      prev.map((store) =>
+        store.id === storeId
+          ? { ...store, products: [...store.products, newProduct] }
+          : store
+      )
+    );
+    showToast('Produk Ditambahkan', `Produk "${newProduct.name}" berhasil ditambahkan ke toko.`);
   };
 
   const resetToDefault = () => {
     setHouses(INITIAL_RUMAH_PANGGUNG);
-    setUmkmProducts(INITIAL_UMKM_PRODUCTS);
+    setUmkmStores(INITIAL_UMKM_STORES);
     localStorage.removeItem(STORAGE_KEY_HOUSES);
-    localStorage.removeItem(STORAGE_KEY_UMKM);
+    localStorage.removeItem(STORAGE_KEY_STORES);
     showToast('Data Dipulihkan', 'Katalog telah dikembalikan ke data awal terverifikasi kelurahan.', 'info');
   };
 
@@ -116,9 +132,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <DataContext.Provider
       value={{
         houses,
-        umkmProducts,
+        umkmStores,
         addHouse,
-        addUMKM,
+        addStore,
+        addProductToStore,
         resetToDefault,
         toasts,
         removeToast,
