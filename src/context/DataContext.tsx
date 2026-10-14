@@ -67,7 +67,7 @@ interface DataContextType {
     id: string | undefined,
     payload: Record<string, unknown>,
     status: ListingStatus,
-  ) => Promise<void>;
+  ) => Promise<string>;
   deleteListing: (kind: ListingKind, id: string) => Promise<void>;
   uploadImage: (file: File) => Promise<string>;
   addHouse: (
@@ -321,7 +321,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     id: string | undefined,
     payload: Record<string, unknown>,
     status: ListingStatus,
-  ) => {
+  ): Promise<string> => {
     if (!isAdmin) throw new Error("Masuk sebagai administrator untuk mengubah katalog.");
     const activeSession = await currentSession();
     const normalizedPayload = {
@@ -330,10 +330,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       isVerified: status === "published",
       createdAt: payload.createdAt || dateToday(),
     };
-    await upsertListing(kind, id, normalizedPayload, status, activeSession);
+    const saved = await upsertListing(kind, id, normalizedPayload, status, activeSession);
     await refreshAdminCatalog(activeSession);
     await refreshPublicCatalog();
     showToast("Perubahan tersimpan", "Data katalog berhasil diperbarui.");
+    return saved.id;
   };
 
   const deleteListing = async (kind: ListingKind, id: string) => {
