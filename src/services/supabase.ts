@@ -216,15 +216,20 @@ export async function reviewStoreSubmission(session: SupabaseSession, submission
 
 export async function createPartnerAccount(session: SupabaseSession, email: string, storeId: string, temporaryPassword: string): Promise<"created" | "reset"> {
   const { url, anonKey } = requireConfig();
-  const response = await fetch(`${url}/functions/v1/create-partner-account`, {
-    method: "POST",
-    headers: {
-      apikey: anonKey,
-      Authorization: `Bearer ${session.access_token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email: email.trim().toLowerCase(), storeId, temporaryPassword }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${url}/functions/v1/create-partner-account`, {
+      method: "POST",
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: email.trim().toLowerCase(), storeId, temporaryPassword }),
+    });
+  } catch {
+    throw new Error("Layanan pembuatan akun tidak dapat dihubungi. Pastikan fungsi Supabase create-partner-account sudah diterapkan pada proyek yang sama dengan situs ini.");
+  }
   const body = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(body?.error || "Akun belum dapat dibuat. Periksa koneksi lalu coba lagi.");
