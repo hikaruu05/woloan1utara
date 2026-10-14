@@ -1,15 +1,11 @@
 import React from 'react';
-import { Hammer, Heart, RefreshCw, MapPin, Phone, Mail, GraduationCap } from 'lucide-react';
-import { useData } from '../context/DataContext';
+import { Hammer, Heart, MapPin, GraduationCap, LockKeyhole } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (sectionId: string) => void;
-  onOpenUpload: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenUpload }) => {
-  const { resetToDefault } = useData();
-
+export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   return (
     <footer className="bg-wood-950 text-wood-200 border-t border-wood-900 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,8 +27,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenUpload }) => {
             </div>
 
             <p className="text-xs sm:text-sm text-wood-300 leading-relaxed max-w-sm">
-              Sentra industri rumah panggung kayu knockdown tradisional Minahasa yang mendunia, 
-              serta direktori digital berbasis toko bagi seluruh pelaku UMKM warga lokal.
+              Portal informasi untuk mengenal rumah panggung, usaha warga, dan destinasi Woloan 1 Utara.
             </p>
 
             <div className="pt-2 flex items-center gap-2 text-xs text-amber-300/90 font-medium">
@@ -112,14 +107,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenUpload }) => {
                   🛍️ Halaman Direktori Toko UMKM
                 </button>
               </li>
-              <li className="pt-2">
-                <button
-                  onClick={onOpenUpload}
-                  className="text-amber-400 font-bold hover:text-amber-300 transition-colors"
-                >
-                  + Upload Toko / Rumah Baru
-                </button>
-              </li>
+              <li><button onClick={() => onNavigate('katalog-destinasi')} className="hover:text-amber-300 transition-colors text-left font-medium">🧭 Destinasi Wisata</button></li>
             </ul>
           </div>
 
@@ -133,28 +121,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenUpload }) => {
                 <MapPin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <span>Jl. Raya Woloan, Kec. Tomohon Barat, Tomohon 95431</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>0812-4411-XXXX</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-amber-400 shrink-0" />
-                <span className="truncate">woloan1utara@tomohon.go.id</span>
-              </div>
+              <p className="text-wood-400">Kontak layanan resmi akan ditambahkan setelah dikonfirmasi.</p>
             </div>
 
-            {/* Reset data helper */}
-            <div className="mt-5 pt-4 border-t border-wood-800">
-              <button
-                onClick={resetToDefault}
-                className="inline-flex items-center gap-1.5 text-[11px] text-wood-400 hover:text-amber-300 transition-colors"
-                title="Pulihkan data listing ke versi bawaan awal"
-              >
-                <RefreshCw className="w-3 h-3" />
-                <span>Reset Data Katalog Demo</span>
-              </button>
-            </div>
           </div>
+          <div className="lg:col-span-5 -mt-4"><button onClick={() => onNavigate('admin')} className="inline-flex items-center gap-2 text-xs font-semibold text-wood-400 transition-colors hover:text-amber-300"><LockKeyhole className="h-3.5 w-3.5"/> Masuk Admin</button></div>
         </div>
 
         {/* Bottom Credits */}

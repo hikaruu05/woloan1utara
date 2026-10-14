@@ -1,185 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, X, PlusCircle, Home, Hammer, Store, Info, Phone, Calculator, Sparkles, MapPin } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { Compass, Hammer, Home, Info, LockKeyhole, MapPin, Menu, Store, UserRound, X } from "lucide-react";
 
-interface NavbarProps {
-  onOpenUpload: () => void;
-  currentPage: string;
-  onNavigate: (pageId: string) => void;
-}
+interface NavbarProps { currentPage:string; onNavigate:(pageId:string)=>void }
+const navItems = [
+  {id:"beranda",label:"Beranda",icon:Home},
+  {id:"katalog-rumah",label:"Rumah Panggung",icon:Hammer},
+  {id:"katalog-umkm",label:"UMKM & Produk",icon:Store},
+  {id:"katalog-destinasi",label:"Destinasi Wisata",icon:Compass},
+  {id:"profil",label:"Profil",icon:Info},
+  {id:"kontak",label:"Kontak & Peta",icon:MapPin},
+];
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenUpload, currentPage, onNavigate }) => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 15);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const navItems = [
-    { id: 'beranda', label: 'Beranda', icon: Home },
-    { id: 'profil', label: 'Profil Desa', icon: Info },
-    { id: 'speciality', label: 'Keistimewaan', icon: Sparkles },
-    { id: 'katalog-rumah', label: 'Rumah Panggung', icon: Hammer },
-    { id: 'katalog-umkm', label: 'Toko UMKM', icon: Store },
-    { id: 'kalkulator', label: 'Simulasi Biaya', icon: Calculator },
-    { id: 'kontak', label: 'Kontak & Peta', icon: MapPin },
-  ];
-
-  const handleNavClick = (id: string) => {
-    onNavigate(id);
-    setMobileMenuOpen(false);
-  };
-
-  return (
-    <header className="sticky top-0 z-40 w-full transition-all duration-200">
-      {/* Top Banner Notice */}
-      <div className="bg-wood-950 text-wood-100 text-[11px] sm:text-xs px-4 py-1.5 font-medium border-b border-wood-900/80">
-        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-              PROGRAM KKT 2026
-            </span>
-            <span className="truncate">Kelurahan Woloan Satu Utara • Tomohon Barat, Sulawesi Utara</span>
-          </div>
-          <div className="hidden md:flex items-center gap-4 text-wood-300 text-[11px]">
-            <span className="flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5 text-amber-400" />
-              Sentra Rumah Kayu Dunia
-            </span>
-            <span className="flex items-center gap-1">
-              <Phone className="w-3.5 h-3.5 text-forest-400" />
-              Layanan Warga: 0812-4411-XXXX
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Bar */}
-      <div
-        className={`w-full transition-all duration-200 ${
-          isScrolled
-            ? 'bg-white/95 backdrop-blur-md shadow-warm-md border-b border-wood-200/80 py-2.5'
-            : 'bg-warm-50/95 backdrop-blur-sm border-b border-warm-200/60 py-3'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-          {/* Logo & Identity */}
-          <button
-            onClick={() => handleNavClick('beranda')}
-            className="flex items-center gap-3 text-left group focus:outline-none shrink-0"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-wood-800 via-wood-700 to-wood-900 flex items-center justify-center text-white shadow-warm-sm group-hover:scale-105 transition-transform duration-200 border border-wood-600/40">
-              <Hammer className="w-5 h-5 text-amber-300" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-serif font-bold text-base sm:text-lg text-wood-950 tracking-tight leading-none">
-                  Woloan 1 Utara
-                </span>
-                <span className="hidden sm:inline-block text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-forest-100 text-forest-800 border border-forest-200">
-                  Desa Wisata
-                </span>
-              </div>
-              <p className="text-[11px] text-warm-600 font-medium tracking-wide mt-0.5">
-                Tomohon Barat, Kota Tomohon
-              </p>
-            </div>
-          </button>
-
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {navItems.map((item) => {
-              const isActive = currentPage === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item.id)}
-                  className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 ${
-                    isActive
-                      ? 'bg-wood-800 text-white shadow-warm-sm font-bold'
-                      : 'text-warm-700 hover:text-wood-950 hover:bg-warm-100/80'
-                  }`}
-                >
-                  <item.icon className={`w-3.5 h-3.5 ${isActive ? 'text-amber-300' : 'text-warm-500'}`} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Action CTA Button */}
-          <div className="hidden sm:flex items-center gap-2 shrink-0">
-            <button
-              onClick={onOpenUpload}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-wood-800 via-wood-700 to-wood-900 hover:from-wood-900 hover:to-wood-950 shadow-warm-sm hover:shadow-warm-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 border border-amber-600/30"
-            >
-              <PlusCircle className="w-4 h-4 text-amber-300" />
-              <span>+ Pasang Usaha / Rumah</span>
-            </button>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="flex items-center gap-2 lg:hidden">
-            <button
-              onClick={onOpenUpload}
-              className="px-3 py-1.5 rounded-lg bg-wood-800 text-white text-xs font-bold flex items-center gap-1 sm:hidden shadow-xs"
-            >
-              <PlusCircle className="w-3.5 h-3.5 text-amber-300" />
-              <span>Upload</span>
-            </button>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl bg-warm-100 text-warm-800 hover:bg-warm-200 transition-colors focus:outline-none"
-              aria-label="Buka Menu"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Menu Drawer */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-white/98 backdrop-blur-xl border-b border-wood-200 shadow-warm-lg px-4 pt-3 pb-6 animate-in slide-in-from-top-2 duration-200">
-          <div className="space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentPage === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item.id)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-left transition-colors ${
-                    isActive
-                      ? 'bg-wood-800 text-white font-bold'
-                      : 'text-warm-700 hover:bg-warm-100 hover:text-wood-900'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-amber-300' : 'text-warm-500'}`} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-warm-200">
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenUpload();
-              }}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-wood-800 to-wood-900 shadow-warm-md"
-            >
-              <PlusCircle className="w-4 h-4 text-amber-300" />
-              <span>+ Daftarkan Usaha Toko / Rumah Panggung</span>
-            </button>
-          </div>
-        </div>
-      )}
-    </header>
-  );
+export const Navbar:React.FC<NavbarProps> = ({currentPage,onNavigate}) => {
+  const [scrolled,setScrolled]=useState(false);
+  const [open,setOpen]=useState(false);
+  useEffect(()=>{const onScroll=()=>setScrolled(window.scrollY>12);window.addEventListener("scroll",onScroll,{passive:true});return()=>window.removeEventListener("scroll",onScroll);},[]);
+  const navigate=(id:string)=>{onNavigate(id);setOpen(false);};
+  const active=(id:string)=>id===currentPage || (id==="beranda"&&currentPage==="beranda");
+  return <header className={`sticky top-0 z-40 border-b border-warm-200/80 transition-shadow ${scrolled?"bg-white/95 shadow-sm backdrop-blur":"bg-warm-50/95 backdrop-blur"}`}>
+    <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+      <button onClick={()=>navigate("beranda")} className="flex min-w-0 items-center gap-2.5 text-left" aria-label="Beranda Woloan 1 Utara">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-wood-900 text-orange-200"><Hammer size={19}/></span>
+        <span className="min-w-0"><span className="block truncate font-serif text-base font-bold leading-tight text-wood-950 sm:text-lg">Woloan 1 Utara</span><span className="mt-0.5 block truncate text-[11px] text-warm-600">Tomohon Barat, Kota Tomohon</span></span>
+      </button>
+      <nav aria-label="Navigasi utama" className="hidden xl:flex items-center gap-0.5">
+        {navItems.map(item=><button key={item.id} onClick={()=>navigate(item.id)} aria-current={active(item.id)?"page":undefined} className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold transition-colors ${active(item.id)?"bg-orange-100 text-wood-950":"text-warm-700 hover:bg-warm-100 hover:text-wood-950"}`}><item.icon size={14}/>{item.label}</button>)}
+      </nav>
+      <button onClick={()=>navigate("admin")} className="hidden shrink-0 items-center gap-2 rounded-xl border border-wood-300 bg-white px-3 py-2.5 text-xs font-bold text-wood-900 transition hover:bg-orange-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wood-700 xl:inline-flex"><LockKeyhole size={15}/>Masuk Admin</button>
+      <button onClick={()=>navigate("mitra")} className="hidden shrink-0 items-center gap-2 rounded-xl bg-wood-900 px-3 py-2.5 text-xs font-bold text-white transition hover:bg-wood-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wood-700 xl:inline-flex"><UserRound size={15}/>Masuk Mitra</button>
+      <button onClick={()=>setOpen(value=>!value)} className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-warm-300 bg-white text-wood-900 xl:hidden" aria-label={open?"Tutup menu":"Buka menu"} aria-expanded={open} aria-controls="mobile-navigation">{open?<X size={20}/>:<Menu size={20}/>}</button>
+    </div>
+    {open&&<nav id="mobile-navigation" aria-label="Navigasi ponsel" className="border-t border-warm-200 bg-white px-4 pb-5 pt-3 shadow-lg xl:hidden"><div className="mx-auto max-w-7xl space-y-1">{navItems.map(item=><button key={item.id} onClick={()=>navigate(item.id)} aria-current={active(item.id)?"page":undefined} className={`flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold ${active(item.id)?"bg-orange-100 text-wood-950":"text-warm-800 hover:bg-warm-50"}`}><item.icon size={17}/>{item.label}</button>)}<button onClick={()=>navigate("speciality")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-warm-800 hover:bg-warm-50"><Info size={17}/>Keistimewaan Woloan</button><button onClick={()=>navigate("kalkulator")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold text-warm-800 hover:bg-warm-50"><Hammer size={17}/>Simulasi Biaya Rumah</button><div className="grid gap-2 border-t border-warm-200 pt-3 sm:grid-cols-2"><button onClick={()=>navigate("mitra")} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-wood-900 text-sm font-bold text-white"><UserRound size={16}/>Masuk Mitra Usaha</button><button onClick={()=>navigate("admin")} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-warm-300 bg-white text-sm font-bold text-wood-900"><LockKeyhole size={16}/>Masuk Admin</button></div></div></nav>}
+  </header>;
 };

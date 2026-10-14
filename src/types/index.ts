@@ -52,6 +52,48 @@ export interface UMKMStore {
   products: UMKMProductItem[]; // Koleksi produk per toko
 }
 
+export type DestinationCategory =
+  | "alam"
+  | "budaya"
+  | "kuliner"
+  | "kerajinan"
+  | "lainnya";
+
+export interface TravelDestination {
+  id: string;
+  name: string;
+  category: DestinationCategory;
+  area: string;
+  summary: string;
+  description: string;
+  address: string;
+  mapsUrl?: string;
+  openingHours?: string;
+  entryFee?: string;
+  facilities: string[];
+  accessibility?: string;
+  activities: string[];
+  contactPhone?: string;
+  bookingUrl?: string;
+  visitorRules?: string;
+  imageUrl: string;
+  galleryUrls?: string[];
+  isVerified: boolean;
+  createdAt: string;
+}
+
+export type ListingKind = "houses" | "stores" | "destinations";
+export type ListingStatus = "draft" | "published" | "archived";
+
+export interface AdminListing {
+  id: string;
+  kind: ListingKind;
+  status: ListingStatus;
+  payload: RumahPanggung | UMKMStore | TravelDestination;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Backward compatibility alias if needed
 export type ProductUMKM = UMKMProductItem & {
   storeId?: string;
@@ -68,11 +110,4 @@ export interface VillageOfficial {
   nip?: string;
   lingkungan?: string;
   phone?: string;
-}
-
-export interface VillageStat {
-  label: string;
-  value: string;
-  description: string;
-  icon: string;
 }

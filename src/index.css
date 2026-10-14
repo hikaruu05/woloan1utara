@@ -10,17 +10,17 @@
 
 /* Custom Wood Grain Texture & Subtle Background Accents */
 .bg-wood-pattern {
-  background-color: #FAF6F0;
-  background-image: radial-gradient(rgba(156, 109, 52, 0.08) 1px, transparent 0);
+  background-color: #FFF8F2;
+  background-image: radial-gradient(rgba(169, 79, 64, 0.08) 1px, transparent 0);
   background-size: 24px 24px;
 }
 
 .wood-gradient-overlay {
-  background: linear-gradient(180deg, rgba(26, 13, 3, 0.75) 0%, rgba(46, 25, 6, 0.9) 100%);
+  background: linear-gradient(180deg, rgba(66, 31, 34, 0.75) 0%, rgba(97, 49, 49, 0.9) 100%);
 }
 
 .hero-overlay {
-  background: linear-gradient(135deg, rgba(22, 62, 45, 0.85) 0%, rgba(97, 60, 23, 0.82) 100%);
+  background: linear-gradient(135deg, rgba(107, 48, 51, 0.85) 0%, rgba(145, 71, 69, 0.82) 100%);
 }
 
 /* Custom subtle scrollbar */
@@ -29,14 +29,14 @@
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #F7F3EB;
+  background: #FFF4EA;
 }
 ::-webkit-scrollbar-thumb {
-  background: #D4B483;
+  background: #F08A5D;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #BA8D52;
+  background: #D96558;
 }
 
 /* Dialog & Glassmorphism */
@@ -44,12 +44,12 @@
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(221, 210, 192, 0.5);
+  border: 1px solid rgba(234, 209, 193, 0.6);
 }
 
 .glass-dark {
-  background: rgba(46, 25, 6, 0.85);
+  background: rgba(97, 49, 49, 0.88);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(212, 180, 131, 0.2);
+  border: 1px solid rgba(240, 138, 93, 0.25);
 }

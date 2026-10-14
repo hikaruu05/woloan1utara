@@ -1,10 +1,40 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { RumahPanggung, UMKMStore, UMKMProductItem } from '../types';
-import { INITIAL_RUMAH_PANGGUNG, INITIAL_UMKM_STORES } from '../data/mockData';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import {
+  AdminListing,
+  ListingKind,
+  ListingStatus,
+  RumahPanggung,
+  TravelDestination,
+  UMKMProductItem,
+  UMKMStore,
+} from "../types";
+import { StoreSubmission } from "../services/supabase";
+import {
+  deleteListing as deleteRemoteListing,
+  fetchListings,
+  isAdministrator,
+  getPartnerAccount,
+  fetchPartnerStore,
+  fetchStoreSubmissions,
+  submitStoreChanges,
+  reviewStoreSubmission,
+  uploadPartnerListingImage,
+  createPartnerAccount as createRemotePartnerAccount,
+  changePartnerPassword as changeRemotePartnerPassword,
+  isSupabaseConfigured,
+  readSavedSession,
+  refreshSession,
+  saveSession,
+  signIn,
+  signOut,
+  SupabaseSession,
+  upsertListing,
+  uploadListingImage,
+} from "../services/supabase";
 
 interface ToastMessage {
   id: string;
-  type: 'success' | 'info' | 'error';
+  type: "success" | "info" | "error";
   title: string;
   message: string;
 }
@@ -12,120 +42,352 @@ interface ToastMessage {
 interface DataContextType {
   houses: RumahPanggung[];
   umkmStores: UMKMStore[];
-  addHouse: (house: Omit<RumahPanggung, 'id' | 'createdAt' | 'isVerified'>) => void;
-  addStore: (store: Omit<UMKMStore, 'id' | 'createdAt' | 'isVerified'>) => void;
-  addProductToStore: (storeId: string, product: Omit<UMKMProductItem, 'id'>) => void;
+  destinations: TravelDestination[];
+  adminListings: AdminListing[];
+  staffManaged: boolean;
+  catalogLoading: boolean;
+  adminLoading: boolean;
+  adminEmail: string | null;
+  isAdmin: boolean;
+  isPartner: boolean;
+  partnerMustChangePassword: boolean;
+  partnerStore: UMKMStore | null;
+  partnerSubmissions: StoreSubmission[];
+  loginAdmin: (email: string, password: string) => Promise<void>;
+  loginPartner: (email: string, password: string) => Promise<void>;
+  logoutAdmin: () => Promise<void>;
+  submitPartnerStore: (payload: UMKMStore) => Promise<void>;
+  refreshPartnerData: () => Promise<void>;
+  reviewSubmission: (id: string, decision: "approve" | "reject", note?: string) => Promise<void>;
+  createPartnerAccount: (email: string, storeId: string, temporaryPassword: string) => Promise<"created" | "reset">;
+  changePartnerPassword: (newPassword: string) => Promise<void>;
+  uploadPartnerImage: (file: File) => Promise<string>;
+  saveListing: (
+    kind: ListingKind,
+    id: string | undefined,
+    payload: Record<string, unknown>,
+    status: ListingStatus,
+  ) => Promise<void>;
+  deleteListing: (kind: ListingKind, id: string) => Promise<void>;
+  uploadImage: (file: File) => Promise<string>;
+  addHouse: (
+    house: Omit<RumahPanggung, "id" | "createdAt" | "isVerified">,
+  ) => void;
+  addStore: (store: Omit<UMKMStore, "id" | "createdAt" | "isVerified">) => void;
+  addProductToStore: (
+    storeId: string,
+    product: Omit<UMKMProductItem, "id">,
+  ) => void;
   resetToDefault: () => void;
   toasts: ToastMessage[];
   removeToast: (id: string) => void;
-  showToast: (title: string, message: string, type?: 'success' | 'info' | 'error') => void;
+  showToast: (
+    title: string,
+    message: string,
+    type?: "success" | "info" | "error",
+  ) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-const STORAGE_KEY_HOUSES = 'kkt_woloan_houses_v3';
-const STORAGE_KEY_STORES = 'kkt_woloan_stores_v3';
+const dateToday = () => new Date().toISOString().slice(0, 10);
 
-export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [houses, setHouses] = useState<RumahPanggung[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_HOUSES);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error('Error loading saved houses:', e);
-    }
-    return INITIAL_RUMAH_PANGGUNG;
-  });
-
-  const [umkmStores, setUmkmStores] = useState<UMKMStore[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_STORES);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error('Error loading saved stores:', e);
-    }
-    return INITIAL_UMKM_STORES;
-  });
-
+export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [houses, setHouses] = useState<RumahPanggung[]>([]);
+  const [umkmStores, setUmkmStores] = useState<UMKMStore[]>([]);
+  const [destinations, setDestinations] = useState<TravelDestination[]>([]);
+  const [adminListings, setAdminListings] = useState<AdminListing[]>([]);
+  const [session, setSession] = useState<SupabaseSession | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isPartner, setIsPartner] = useState(false);
+  const [partnerMustChangePassword, setPartnerMustChangePassword] = useState(false);
+  const [partnerStoreId, setPartnerStoreId] = useState<string | null>(null);
+  const [partnerStore, setPartnerStore] = useState<UMKMStore | null>(null);
+  const [partnerSubmissions, setPartnerSubmissions] = useState<StoreSubmission[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [adminLoading, setAdminLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY_HOUSES, JSON.stringify(houses));
-    } catch (e) {
-      console.error('Error saving houses to localStorage:', e);
-    }
-  }, [houses]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY_STORES, JSON.stringify(umkmStores));
-    } catch (e) {
-      console.error('Error saving stores to localStorage:', e);
-    }
-  }, [umkmStores]);
-
-  const showToast = (title: string, message: string, type: 'success' | 'info' | 'error' = 'success') => {
-    const id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
-    setToasts((prev) => [...prev, { id, title, message, type }]);
-    setTimeout(() => {
-      removeToast(id);
+  const showToast = (
+    title: string,
+    message: string,
+    type: "success" | "info" | "error" = "success",
+  ) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    setToasts((previous) => [...previous, { id, title, message, type }]);
+    window.setTimeout(() => {
+      setToasts((previous) => previous.filter((toast) => toast.id !== id));
     }, 5000);
   };
 
   const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts((previous) => previous.filter((toast) => toast.id !== id));
   };
 
-  const addHouse = (houseData: Omit<RumahPanggung, 'id' | 'createdAt' | 'isVerified'>) => {
-    const newHouse: RumahPanggung = {
-      ...houseData,
-      id: 'rp-user-' + Date.now(),
-      isVerified: false,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    setHouses((prev) => [newHouse, ...prev]);
-    showToast(
-      'Katalog Rumah Panggung Ditambahkan!',
-      `Rumah panggung "${newHouse.title}" kini telah terdaftar dan tampil di etalase Woloan 1 Utara.`
-    );
+  const refreshPublicCatalog = async () => {
+    if (!isSupabaseConfigured) {
+      setHouses([]);
+      setUmkmStores([]);
+      setDestinations([]);
+      setCatalogLoading(false);
+      return;
+    }
+
+    try {
+      const [houseRows, storeRows, destinationRows] = await Promise.all([
+        fetchListings("houses"),
+        fetchListings("stores"),
+        fetchListings("destinations"),
+      ]);
+      setHouses(houseRows.map((row) => row.payload as RumahPanggung));
+      setUmkmStores(storeRows.map((row) => row.payload as UMKMStore));
+      setDestinations(
+        destinationRows.map((row) => row.payload as TravelDestination),
+      );
+    } catch (error) {
+      console.error("Gagal memuat katalog publik:", error);
+      showToast(
+        "Katalog belum dapat dimuat",
+        error instanceof Error ? error.message : "Periksa konfigurasi layanan katalog.",
+        "error",
+      );
+    } finally {
+      setCatalogLoading(false);
+    }
   };
 
-  const addStore = (storeData: Omit<UMKMStore, 'id' | 'createdAt' | 'isVerified'>) => {
-    const newStore: UMKMStore = {
-      ...storeData,
-      id: 'store-user-' + Date.now(),
-      isVerified: false,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    setUmkmStores((prev) => [newStore, ...prev]);
-    showToast(
-      'Toko UMKM Berhasil Didaftarkan!',
-      `Usaha "${newStore.name}" oleh ${newStore.ownerName} beserta katalog produknya telah aktif di portal.`
-    );
+  const refreshAdminCatalog = async (activeSession: SupabaseSession) => {
+    setAdminLoading(true);
+    try {
+      const [houseRows, storeRows, destinationRows] = await Promise.all([
+        fetchListings("houses", activeSession.access_token),
+        fetchListings("stores", activeSession.access_token),
+        fetchListings("destinations", activeSession.access_token),
+      ]);
+      setAdminListings([...houseRows, ...storeRows, ...destinationRows]);
+      setPartnerSubmissions(await fetchStoreSubmissions(activeSession));
+    } finally {
+      setAdminLoading(false);
+    }
   };
 
-  const addProductToStore = (storeId: string, productData: Omit<UMKMProductItem, 'id'>) => {
-    const newProduct: UMKMProductItem = {
-      ...productData,
-      id: 'prod-user-' + Date.now()
+  const currentSession = async () => {
+    if (!session) throw new Error("Sesi admin telah berakhir. Silakan masuk kembali.");
+    if (session.expires_at > Date.now() + 60_000) return session;
+
+    const renewed = await refreshSession(session);
+    setSession(renewed);
+    saveSession(renewed);
+    return renewed;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    const initialize = async () => {
+      await refreshPublicCatalog();
+      const saved = readSavedSession();
+      if (!saved || !isSupabaseConfigured) return;
+
+      try {
+        const renewed = saved.expires_at > Date.now() + 60_000
+          ? saved
+          : await refreshSession(saved);
+        const admin = await isAdministrator(renewed);
+        const partnerAccount = admin ? null : await getPartnerAccount(renewed);
+        const ownedStoreId = partnerAccount?.storeId || null;
+        if (!admin && !partnerAccount) { await signOut(renewed.access_token); saveSession(null); return; }
+        if (cancelled) return;
+        setSession(renewed);
+        saveSession(renewed);
+        setIsAdmin(admin);
+        setIsPartner(!admin);
+        setPartnerMustChangePassword(partnerAccount?.mustChangePassword || false);
+        setPartnerStoreId(ownedStoreId);
+        if (admin) await refreshAdminCatalog(renewed);
+        else if (ownedStoreId) {
+          const [store, submissions] = await Promise.all([fetchPartnerStore(renewed, ownedStoreId), fetchStoreSubmissions(renewed, ownedStoreId)]);
+          setPartnerStore(store); setPartnerSubmissions(submissions);
+        }
+      } catch {
+        saveSession(null);
+      }
     };
-    setUmkmStores((prev) =>
-      prev.map((store) =>
-        store.id === storeId
-          ? { ...store, products: [...store.products, newProduct] }
-          : store
-      )
+    void initialize();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const loginAdmin = async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      throw new Error("Login belum siap. Supabase URL dan anon key belum diatur.");
+    }
+    const nextSession = await signIn(email.trim(), password);
+    const allowed = await isAdministrator(nextSession);
+    if (!allowed) {
+      await signOut(nextSession.access_token);
+      throw new Error("Akun ini belum diberi akses administrator oleh pengelola portal.");
+    }
+
+    setSession(nextSession);
+    saveSession(nextSession);
+    setIsAdmin(true);
+    setIsPartner(false);
+    setPartnerMustChangePassword(false);
+    setPartnerStoreId(null);
+    await refreshAdminCatalog(nextSession);
+  };
+
+  const loginPartner = async (email: string, password: string) => {
+    if (!isSupabaseConfigured) throw new Error("Login belum siap. Koneksi layanan belum diatur.");
+    const nextSession = await signIn(email.trim(), password);
+    if (await isAdministrator(nextSession)) {
+      await signOut(nextSession.access_token);
+      throw new Error("Akun ini digunakan untuk portal petugas. Silakan masuk melalui halaman admin.");
+    }
+    const partnerAccount = await getPartnerAccount(nextSession);
+    if (!partnerAccount) {
+      await signOut(nextSession.access_token);
+      throw new Error("Akun ini belum terhubung ke data usaha. Hubungi petugas kelurahan.");
+    }
+    try {
+      const [store, submissions] = await Promise.all([fetchPartnerStore(nextSession, partnerAccount.storeId), fetchStoreSubmissions(nextSession, partnerAccount.storeId)]);
+      setSession(nextSession); saveSession(nextSession); setIsPartner(true); setIsAdmin(false);
+      setPartnerStoreId(partnerAccount.storeId); setPartnerStore(store); setPartnerSubmissions(submissions);
+      setPartnerMustChangePassword(partnerAccount.mustChangePassword);
+    } catch (error) { await signOut(nextSession.access_token); throw error; }
+  };
+
+  const refreshPartnerData = async () => {
+    if (!session || !partnerStoreId) return;
+    const activeSession = await currentSession();
+    const [store, submissions] = await Promise.all([fetchPartnerStore(activeSession, partnerStoreId), fetchStoreSubmissions(activeSession, partnerStoreId)]);
+    setPartnerStore(store); setPartnerSubmissions(submissions);
+  };
+
+  const submitPartnerStore = async (payload: UMKMStore) => {
+    if (!isPartner || !partnerStoreId) throw new Error("Masuk dengan akun usaha untuk mengirim perubahan.");
+    if (partnerMustChangePassword) throw new Error("Ganti kata sandi sementara sebelum mengirim perubahan.");
+    if (partnerSubmissions.some((submission) => submission.status === "pending")) throw new Error("Perubahan Anda sedang diperiksa. Tunggu tanggapan petugas sebelum mengirim perubahan lain.");
+    await submitStoreChanges(await currentSession(), partnerStoreId, payload);
+    await refreshPartnerData();
+    showToast("Perubahan dikirim", "Petugas kelurahan akan memeriksa data sebelum diterbitkan.", "info");
+  };
+
+  const reviewSubmission = async (id: string, decision: "approve" | "reject", note = "") => {
+    if (!isAdmin) throw new Error("Hanya petugas yang dapat meninjau perubahan.");
+    const activeSession = await currentSession();
+    await reviewStoreSubmission(activeSession, id, decision, note);
+    await Promise.all([refreshAdminCatalog(activeSession), refreshPublicCatalog()]);
+    setPartnerSubmissions(await fetchStoreSubmissions(activeSession));
+    showToast(decision === "approve" ? "Perubahan diterbitkan" : "Pengajuan ditolak", decision === "approve" ? "Listing usaha telah diperbarui." : "Status pengajuan telah diperbarui.", decision === "approve" ? "success" : "info");
+  };
+
+  const createPartnerAccount = async (email: string, storeId: string, temporaryPassword: string) => {
+    if (!isAdmin) throw new Error("Hanya petugas yang dapat membuat akun mitra.");
+    const activeSession = await currentSession();
+    const action = await createRemotePartnerAccount(activeSession, email, storeId, temporaryPassword);
+    showToast(action === "reset" ? "Kredensial diatur ulang" : "Akun mitra dibuat", "Berikan username dan kata sandi sementara kepada pemilik usaha secara pribadi.");
+    return action;
+  };
+
+  const changePartnerPassword = async (newPassword: string) => {
+    if (!isPartner || !partnerMustChangePassword) throw new Error("Akun ini tidak memerlukan penggantian kata sandi sementara.");
+    await changeRemotePartnerPassword(await currentSession(), newPassword);
+    setPartnerMustChangePassword(false);
+    showToast("Kata sandi diperbarui", "Sekarang Anda dapat mengelola data usaha dan mengirim perubahan.");
+  };
+
+  const uploadPartnerImage = async (file: File) => {
+    if (!isPartner) throw new Error("Masuk dengan akun usaha untuk mengunggah foto.");
+    if (partnerMustChangePassword) throw new Error("Ganti kata sandi sementara sebelum mengunggah foto.");
+    return uploadPartnerListingImage(file, await currentSession());
+  };
+
+  const logoutAdmin = async () => {
+    if (session) await signOut(session.access_token).catch(() => undefined);
+    saveSession(null);
+    setSession(null);
+    setIsAdmin(false);
+    setIsPartner(false); setPartnerMustChangePassword(false); setPartnerStoreId(null); setPartnerStore(null); setPartnerSubmissions([]);
+    setAdminListings([]);
+    await refreshPublicCatalog();
+  };
+
+  const saveListing = async (
+    kind: ListingKind,
+    id: string | undefined,
+    payload: Record<string, unknown>,
+    status: ListingStatus,
+  ) => {
+    if (!isAdmin) throw new Error("Masuk sebagai administrator untuk mengubah katalog.");
+    const activeSession = await currentSession();
+    const normalizedPayload = {
+      ...payload,
+      id: id || payload.id || crypto.randomUUID(),
+      isVerified: status === "published",
+      createdAt: payload.createdAt || dateToday(),
+    };
+    await upsertListing(kind, id, normalizedPayload, status, activeSession);
+    await refreshAdminCatalog(activeSession);
+    await refreshPublicCatalog();
+    showToast("Perubahan tersimpan", "Data katalog berhasil diperbarui.");
+  };
+
+  const deleteListing = async (kind: ListingKind, id: string) => {
+    if (!isAdmin) throw new Error("Masuk sebagai administrator untuk mengubah katalog.");
+    const activeSession = await currentSession();
+    await deleteRemoteListing(kind, id, activeSession);
+    await refreshAdminCatalog(activeSession);
+    await refreshPublicCatalog();
+    showToast("Listing dihapus", "Data berhasil dihapus dari katalog.", "info");
+  };
+
+  const uploadImage = async (file: File) => {
+    if (!isAdmin) throw new Error("Masuk sebagai administrator untuk mengunggah foto.");
+    return uploadListingImage(file, await currentSession());
+  };
+
+  const addHouse = (
+    house: Omit<RumahPanggung, "id" | "createdAt" | "isVerified">,
+  ) => {
+    void saveListing("houses", undefined, house as Record<string, unknown>, "draft")
+      .catch((error) => showToast("Rumah belum tersimpan", String(error), "error"));
+  };
+
+  const addStore = (store: Omit<UMKMStore, "id" | "createdAt" | "isVerified">) => {
+    void saveListing("stores", undefined, store as Record<string, unknown>, "draft")
+      .catch((error) => showToast("Toko belum tersimpan", String(error), "error"));
+  };
+
+  const addProductToStore = (
+    storeId: string,
+    product: Omit<UMKMProductItem, "id">,
+  ) => {
+    const existing = adminListings.find(
+      (listing) => listing.kind === "stores" && listing.id === storeId,
     );
-    showToast('Produk Ditambahkan', `Produk "${newProduct.name}" berhasil ditambahkan ke toko.`);
+    if (!existing) {
+      showToast("Toko tidak ditemukan", "Pilih toko yang ingin diperbarui.", "error");
+      return;
+    }
+    const store = existing.payload as UMKMStore;
+    const products = [
+      ...store.products,
+      { ...product, id: crypto.randomUUID() },
+    ];
+    void saveListing("stores", storeId, { ...store, products }, existing.status)
+      .catch((error) => showToast("Produk belum tersimpan", String(error), "error"));
   };
 
   const resetToDefault = () => {
-    setHouses(INITIAL_RUMAH_PANGGUNG);
-    setUmkmStores(INITIAL_UMKM_STORES);
-    localStorage.removeItem(STORAGE_KEY_HOUSES);
-    localStorage.removeItem(STORAGE_KEY_STORES);
-    showToast('Data Dipulihkan', 'Katalog telah dikembalikan ke data awal terverifikasi kelurahan.', 'info');
+    showToast(
+      "Katalog terhubung",
+      "Data demo tidak digunakan. Kelola listing melalui dashboard admin.",
+      "info",
+    );
   };
 
   return (
@@ -133,13 +395,36 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         houses,
         umkmStores,
+        destinations,
+        adminListings,
+        staffManaged: isSupabaseConfigured,
+        catalogLoading,
+        adminLoading,
+        adminEmail: isAdmin ? session?.user.email || null : null,
+        isAdmin,
+        isPartner,
+        partnerMustChangePassword,
+        partnerStore,
+        partnerSubmissions,
+        loginAdmin,
+        loginPartner,
+        logoutAdmin,
+        submitPartnerStore,
+        refreshPartnerData,
+        reviewSubmission,
+        createPartnerAccount,
+        changePartnerPassword,
+        uploadPartnerImage,
+        saveListing,
+        deleteListing,
+        uploadImage,
         addHouse,
         addStore,
         addProductToStore,
         resetToDefault,
         toasts,
         removeToast,
-        showToast
+        showToast,
       }}
     >
       {children}
@@ -149,8 +434,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useData = () => {
   const context = useContext(DataContext);
-  if (!context) {
-    throw new Error('useData must be used within a DataProvider');
-  }
+  if (!context) throw new Error("useData must be used within a DataProvider");
   return context;
 };

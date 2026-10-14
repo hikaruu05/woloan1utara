@@ -16,7 +16,7 @@ export const SpecialitySection: React.FC<SpecialitySectionProps> = ({ onNavigate
     {
       num: '02',
       title: 'Pemahatan & Sistem Pasak (Purus)',
-      desc: 'Tukang kayu ahli Woloan memahat sambungan lidah-alur dan pasak kayu presisi tanpa bergantung pada paku, menghasilkan struktur lentur yang tahan getaran gempa.'
+      desc: 'Sambungan lidah-alur dan pasak merupakan bagian dari teknik pertukangan rumah kayu Minahasa. Detail struktur dan ketahanan perlu dikonfirmasi untuk setiap model.'
     },
     {
       num: '03',
@@ -36,7 +36,7 @@ export const SpecialitySection: React.FC<SpecialitySectionProps> = ({ onNavigate
   ];
 
   return (
-    <section id="speciality" className="py-16 lg:py-24 bg-wood-pattern relative">
+    <section id="speciality" className="scroll-mt-24 py-16 lg:py-24 bg-wood-pattern relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
@@ -45,11 +45,10 @@ export const SpecialitySection: React.FC<SpecialitySectionProps> = ({ onNavigate
             <span>Keistimewaan & Identitas Budaya</span>
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-wood-950 tracking-tight">
-            Mengapa Rumah Panggung Woloan Termasyhur di Dunia?
+            Mengenal Rumah Panggung Woloan
           </h2>
           <p className="mt-4 text-warm-700 text-base sm:text-lg leading-relaxed">
-            Perpaduan harmonis antara kearifan lokal leluhur Minahasa, kekuatan jenis kayu tropis terbaik, 
-            serta rekayasa konstruksi knockdown tahan gempa yang menjadikannya primadona arsitektur dunia.
+            Kenali bentuk, bahan, dan teknik rumah panggung Minahasa. Spesifikasi serta kesesuaian struktur berbeda pada setiap rumah dan perlu diperiksa bersama pengrajin.
           </p>
         </div>
 
@@ -60,12 +59,10 @@ export const SpecialitySection: React.FC<SpecialitySectionProps> = ({ onNavigate
               <ShieldCheck className="w-6 h-6 text-forest-700" />
             </div>
             <h3 className="font-serif text-xl font-bold text-wood-950 mb-2">
-              Rekayasa Alami Tahan Gempa
+              Sambungan Kayu Tradisional
             </h3>
             <p className="text-warm-700 text-sm leading-relaxed">
-              Arsitektur rumah panggung Minahasa dirancang dengan struktur tiang gantung dan sambungan pasak elastis. 
-              Saat gelombang seismik gempa mengguncang, struktur kayu akan mendistribusikan getaran secara fleksibel 
-              tanpa risiko retak atau runtuh seperti bangunan semen kaku.
+              Sebagian konstruksi menggunakan sambungan kayu dan pasak. Ketahanan terhadap gempa tidak dapat dijamin hanya dari jenis material; mintalah keterangan struktur untuk model yang dipilih.
             </p>
           </div>
 

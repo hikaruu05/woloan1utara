@@ -1,21 +1,25 @@
-import React from 'react';
-import { useData } from '../context/DataContext';
-import { UMKMStore } from '../types';
-import { 
-  Store, MapPin, MessageCircle, PlusCircle, 
-  CheckCircle2, ArrowRight, ExternalLink, Package, Eye 
-} from 'lucide-react';
+import React from "react";
+import { useData } from "../context/DataContext";
+import { UMKMStore } from "../types";
+import {
+  Store,
+  MapPin,
+  MessageCircle,
+  CheckCircle2,
+  ArrowRight,
+  ExternalLink,
+  Package,
+  Eye,
+} from "lucide-react";
 
 interface UMKMSectionProps {
   onSelectStore: (store: UMKMStore) => void;
-  onOpenUpload: () => void;
   onNavigateToFullPage: () => void;
 }
 
 export const UMKMSection: React.FC<UMKMSectionProps> = ({
   onSelectStore,
-  onOpenUpload,
-  onNavigateToFullPage
+  onNavigateToFullPage,
 }) => {
   const { umkmStores } = useData();
 
@@ -24,41 +28,37 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
 
   const getStoreWaLink = (store: UMKMStore) => {
     const text = encodeURIComponent(
-      `Halo ${store.name} (${store.ownerName}), saya melihat profil usaha Anda di Portal Web Kelurahan Woloan 1 Utara. Saya ingin bertanya mengenai produk dan pemesanan. Terima kasih.`
+      `Halo ${store.name} (${store.ownerName}), saya melihat profil usaha Anda di Portal Web Kelurahan Woloan 1 Utara. Saya ingin bertanya mengenai produk dan pemesanan. Terima kasih.`,
     );
-    const cleanPhone = store.phone.replace(/[^0-9]/g, '');
-    const phone = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
+    const cleanPhone = store.phone.replace(/[^0-9]/g, "");
+    const phone = cleanPhone.startsWith("0")
+      ? "62" + cleanPhone.slice(1)
+      : cleanPhone;
     return `https://wa.me/${phone}?text=${text}`;
   };
 
   return (
-    <section id="umkm" className="py-16 lg:py-24 bg-white border-t border-wood-200">
+    <section
+      id="umkm"
+      className="py-16 lg:py-24 bg-white border-t border-wood-200"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-forest-100 text-forest-800 text-xs font-semibold mb-3 border border-forest-200">
               <Store className="w-3.5 h-3.5 text-forest-600" />
-              <span>Direktori Usaha Warga (Berbasis Toko)</span>
+              <span>Usaha Setempat</span>
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-wood-950 tracking-tight">
               Sentra Usaha & Toko UMKM Woloan 1 Utara
             </h2>
             <p className="mt-2 text-warm-700 text-sm sm:text-base max-w-2xl">
-              Etalase per toko bagi pelaku UMKM kuliner legendaris, kerajinan miniatur kayu cempaka, kopi lereng Lokon, 
-              dan bunga potong segar lengkap dengan titik lokasi Google Maps.
+              Temukan usaha warga berdasarkan kategori, lihat produk yang ditawarkan, lalu periksa alamat dan kontak yang dicantumkan pemilik.
             </p>
           </div>
 
           <div className="flex items-center gap-2.5 self-start md:self-auto">
-            <button
-              onClick={onOpenUpload}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-forest-900 bg-forest-50 hover:bg-forest-100 border border-forest-300 shadow-2xs transition-all"
-            >
-              <PlusCircle className="w-4 h-4 text-forest-700" />
-              <span>+ Daftarkan Toko</span>
-            </button>
-
             <button
               onClick={onNavigateToFullPage}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-forest-800 hover:bg-forest-900 shadow-warm-sm hover:shadow-warm-md transition-all"
@@ -70,8 +70,9 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
         </div>
 
         {/* 6 Featured Stores (Store-based) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {previewStores.map((store) => (
+        {previewStores.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {previewStores.map((store) => (
             <div
               key={store.id}
               className="bg-white rounded-3xl overflow-hidden border border-wood-200 shadow-warm-sm hover:shadow-warm-md transition-all duration-300 flex flex-col group"
@@ -81,12 +82,12 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
                 className="relative aspect-[16/10] overflow-hidden bg-wood-100 cursor-pointer"
                 onClick={() => onSelectStore(store)}
               >
-                <img
+                {store.imageUrl ? <img
                   src={store.imageUrl}
                   alt={store.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
-                />
+                /> : <div className="flex h-full items-center justify-center text-forest-700"><Store className="h-10 w-10"/></div>}
                 <div className="absolute inset-0 bg-gradient-to-t from-wood-950/70 via-transparent to-transparent" />
 
                 {/* Badges */}
@@ -103,7 +104,7 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-900/80 backdrop-blur-md text-amber-200 border border-amber-600">
-                      Upload Warga
+                      Belum diverifikasi
                     </span>
                   )}
                 </div>
@@ -121,15 +122,17 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
                     <span className="text-xs uppercase font-bold tracking-wider text-forest-700 bg-forest-50 px-2 py-0.5 rounded">
                       {store.category}
                     </span>
-                    <span className="text-[11px] text-warm-500">Pemilik: <strong>{store.ownerName}</strong></span>
+                    <span className="text-[11px] text-warm-500">
+                      Pemilik: <strong>{store.ownerName}</strong>
+                    </span>
                   </div>
 
-                  <h3
+                  <button type="button"
                     onClick={() => onSelectStore(store)}
-                    className="font-serif font-bold text-lg text-wood-950 group-hover:text-forest-800 transition-colors cursor-pointer leading-snug mt-1"
+                    className="mt-1 w-full text-left font-serif font-bold text-lg text-wood-950 group-hover:text-forest-800 transition-colors leading-snug"
                   >
                     {store.name}
-                  </h3>
+                  </button>
 
                   <p className="text-xs text-warm-600 mt-2 line-clamp-2 leading-relaxed">
                     {store.description}
@@ -158,14 +161,20 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
                     )}
                   </div>
 
-                  {/* Sample Product */}
+                  {/* Produk unggulan toko */}
                   {store.products.length > 0 && (
                     <div className="mt-3.5 bg-warm-50/80 rounded-xl p-2.5 border border-warm-200 text-xs flex items-center justify-between">
                       <div className="flex items-center gap-2 truncate">
                         <div className="w-6 h-6 rounded overflow-hidden bg-warm-200 shrink-0">
-                          <img src={store.products[0].imageUrl} alt="" className="w-full h-full object-cover" />
+                          {store.products[0].imageUrl ? <img
+                            src={store.products[0].imageUrl}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          /> : <Package className="h-4 w-4 text-warm-500"/>}
                         </div>
-                        <span className="truncate text-warm-800 font-medium">{store.products[0].name}</span>
+                        <span className="truncate text-warm-800 font-medium">
+                          {store.products[0].name}
+                        </span>
                       </div>
                       <span className="font-bold text-forest-800 text-[11px] shrink-0 ml-1">
                         {store.products[0].price}
@@ -184,7 +193,7 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
                     <span>Lihat Toko ({store.products.length})</span>
                   </button>
 
-                  <a
+                  {store.phone && <a
                     href={getStoreWaLink(store)}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -192,12 +201,23 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
                   >
                     <MessageCircle className="w-3.5 h-3.5 text-forest-200" />
                     <span>WA Toko</span>
-                  </a>
+                  </a>}
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-forest-300 bg-forest-50/60 px-6 py-10 text-center">
+            <Store className="w-9 h-9 mx-auto text-forest-600 mb-3" />
+            <h3 className="font-serif text-lg font-bold text-forest-950">
+              Informasi UMKM sedang disiapkan
+            </h3>
+            <p className="mt-2 text-sm text-forest-800">
+              Daftar toko dan produk akan ditampilkan setelah diverifikasi oleh kelurahan.
+            </p>
+          </div>
+        )}
 
         {/* CTA to full page */}
         <div className="mt-12 text-center bg-forest-50/60 rounded-3xl p-8 border border-forest-200">
@@ -205,8 +225,8 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
             Ingin Menjelajahi Seluruh Toko & Produk UMKM Woloan 1 Utara?
           </h3>
           <p className="text-xs sm:text-sm text-forest-800 max-w-xl mx-auto mb-5">
-            Buka halaman khusus Direktori UMKM dengan fitur pencarian lengkap, titik lokasi Google Maps, 
-            dan paginasi 10 item per halaman.
+            Buka halaman khusus Direktori UMKM dengan fitur pencarian lengkap,
+            titik lokasi Google Maps, dan paginasi 10 item per halaman.
           </p>
           <button
             onClick={onNavigateToFullPage}

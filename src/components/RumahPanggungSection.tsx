@@ -3,18 +3,16 @@ import { useData } from '../context/DataContext';
 import { RumahPanggung } from '../types';
 import { 
   Hammer, Layers, MapPin, CheckCircle2, 
-  MessageCircle, PlusCircle, ArrowRight, ExternalLink 
+  MessageCircle, ArrowRight, ExternalLink
 } from 'lucide-react';
 
 interface RumahPanggungSectionProps {
   onSelectHouse: (house: RumahPanggung) => void;
-  onOpenUpload: () => void;
   onNavigateToFullPage: () => void;
 }
 
 export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
   onSelectHouse,
-  onOpenUpload,
   onNavigateToFullPage
 }) => {
   const { houses } = useData();
@@ -53,19 +51,11 @@ export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
               Katalog Rumah Panggung Kayu Knockdown
             </h2>
             <p className="mt-2 text-warm-700 text-sm sm:text-base max-w-2xl">
-              Etalase mahakarya bengkel kayu Woloan 1 Utara. Dibuat dengan sistem pasak kayu tahan gempa dan siap dikirim ke seluruh penjuru dunia.
+              Lihat model rumah, ukuran, bahan, kisaran harga, dan informasi pengrajin yang telah dicantumkan pada setiap listing.
             </p>
           </div>
 
           <div className="flex items-center gap-2.5 self-start md:self-auto">
-            <button
-              onClick={onOpenUpload}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-wood-900 bg-white hover:bg-warm-100 border border-wood-300 shadow-2xs transition-all"
-            >
-              <PlusCircle className="w-4 h-4 text-wood-700" />
-              <span>+ Pasang Rumah</span>
-            </button>
-
             <button
               onClick={onNavigateToFullPage}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-wood-800 hover:bg-wood-900 shadow-warm-sm hover:shadow-warm-md transition-all"
@@ -76,9 +66,10 @@ export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
           </div>
         </div>
 
-        {/* 6 Preview Houses */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {previewHouses.map((house) => (
+        {/* Listing rumah hanya muncul jika datanya sudah diisi petugas. */}
+        {previewHouses.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {previewHouses.map((house) => (
             <div
               key={house.id}
               className="bg-white rounded-2xl overflow-hidden border border-wood-200/90 shadow-warm-sm hover:shadow-warm-md transition-all duration-300 flex flex-col group"
@@ -88,12 +79,12 @@ export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
                 className="relative aspect-[16/10] overflow-hidden bg-wood-100 cursor-pointer"
                 onClick={() => onSelectHouse(house)}
               >
-                <img
+                {house.imageUrl ? <img
                   src={house.imageUrl}
                   alt={house.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
-                />
+                /> : <div className="flex h-full items-center justify-center text-wood-600"><Hammer className="h-10 w-10"/></div>}
                 <div className="absolute inset-0 bg-gradient-to-t from-wood-950/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                 {/* Badges */}
@@ -108,7 +99,7 @@ export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-900/80 backdrop-blur-md text-amber-200 border border-amber-600">
-                      Upload Warga
+                      Belum diverifikasi
                     </span>
                   )}
                 </div>
@@ -132,12 +123,12 @@ export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
                     <span className="font-semibold text-warm-900 line-clamp-1">{house.craftsmanName}</span>
                   </div>
 
-                  <h3
+                  <button type="button"
                     onClick={() => onSelectHouse(house)}
-                    className="font-serif font-bold text-base sm:text-lg text-wood-950 group-hover:text-wood-700 transition-colors line-clamp-2 cursor-pointer leading-snug"
+                    className="w-full text-left font-serif font-bold text-base sm:text-lg text-wood-950 group-hover:text-wood-700 transition-colors line-clamp-2 leading-snug"
                   >
                     {house.title}
-                  </h3>
+                  </button>
 
                   {/* Specs */}
                   <div className="grid grid-cols-3 gap-1.5 my-3 py-2.5 px-3 rounded-xl bg-warm-50 border border-warm-200 text-center text-xs">
@@ -191,12 +182,12 @@ export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => onSelectHouse(house)}
-                      className="w-full py-2 px-3 rounded-xl text-xs font-bold text-wood-900 bg-warm-100 hover:bg-wood-100 border border-wood-300 transition-colors text-center"
+                      className={`w-full py-2 px-3 rounded-xl text-xs font-bold text-wood-900 bg-warm-100 hover:bg-wood-100 border border-wood-300 transition-colors text-center ${house.craftsmanPhone ? "" : "col-span-2"}`}
                     >
                       Detail Spek
                     </button>
 
-                    <a
+                    {house.craftsmanPhone && <a
                       href={getWaLink(house)}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -204,13 +195,24 @@ export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
                     >
                       <MessageCircle className="w-3.5 h-3.5 text-forest-200" />
                       <span>Tanya WA</span>
-                    </a>
+                    </a>}
                   </div>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-wood-300 bg-white/70 px-6 py-10 text-center">
+            <Hammer className="w-9 h-9 mx-auto text-wood-600 mb-3" />
+            <h3 className="font-serif text-lg font-bold text-wood-950">
+              Katalog rumah panggung sedang disiapkan
+            </h3>
+            <p className="mt-2 text-sm text-warm-700">
+              Informasi rumah akan ditampilkan setelah diperbarui dan diverifikasi oleh kelurahan.
+            </p>
+          </div>
+        )}
 
         {/* Bottom CTA to dedicated page */}
         <div className="mt-12 text-center bg-white rounded-3xl p-8 border border-wood-200 shadow-warm-sm">

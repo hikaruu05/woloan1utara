@@ -5,22 +5,20 @@ import { Pagination } from './Pagination';
 import { CostCalculator } from './CostCalculator';
 import { 
   Search, Hammer, Layers, MapPin, 
-  CheckCircle2, MessageCircle, PlusCircle, 
-  ExternalLink, ArrowLeft, SlidersHorizontal 
+  CheckCircle2, MessageCircle,
+  ExternalLink, ArrowLeft, SlidersHorizontal
 } from 'lucide-react';
 
 interface RumahPanggungPageProps {
   onSelectHouse: (house: RumahPanggung) => void;
-  onOpenUpload: () => void;
   onBackToHome: () => void;
 }
 
 export const RumahPanggungPage: React.FC<RumahPanggungPageProps> = ({
   onSelectHouse,
-  onOpenUpload,
   onBackToHome
 }) => {
-  const { houses } = useData();
+  const { houses, catalogLoading } = useData();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -112,29 +110,22 @@ export const RumahPanggungPage: React.FC<RumahPanggungPageProps> = ({
                 Katalog Rumah Panggung Kayu Knockdown
               </h1>
               <p className="mt-3 text-wood-200 text-sm sm:text-base leading-relaxed">
-                Jelajahi mahakarya rumah kayu panggung Minahasa hasil kerajinan tangan maestro Woloan 1 Utara. 
-                Tahan gempa, berpasak kayu presisi, dan siap dikirim ke seluruh nusantara hingga mancanegara.
+                Bandingkan ukuran, bahan, kisaran harga, dan informasi pengrajin. Hubungi pengrajin untuk memastikan detail serta penawaran terbaru.
               </p>
             </div>
 
-            <button
-              onClick={onOpenUpload}
-              className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl font-bold text-sm text-wood-950 bg-amber-400 hover:bg-amber-300 shadow-warm-md hover:scale-[1.02] active:scale-[0.98] transition-all self-start md:self-auto shrink-0"
-            >
-              <PlusCircle className="w-4 h-4 text-wood-950" />
-              <span>+ Pasang Rumah Panggung</span>
-            </button>
           </div>
         </div>
 
         {/* Filter & Search Bar */}
-        <div className="bg-white rounded-2xl p-5 shadow-warm-sm border border-wood-200 mb-8 space-y-4">
+        <div className={`bg-white rounded-2xl p-5 shadow-warm-sm border border-wood-200 mb-8 space-y-4 ${houses.length === 0 ? "hidden" : ""}`}>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
             {/* Search Input */}
             <div className="md:col-span-6 relative">
               <Search className="w-4 h-4 text-warm-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
+                aria-label="Cari rumah panggung, bengkel, atau jenis kayu"
                 placeholder="Cari model rumah, nama bengkel, jenis kayu, atau ukuran..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -164,7 +155,7 @@ export const RumahPanggungPage: React.FC<RumahPanggungPageProps> = ({
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="w-full px-3 py-2.5 rounded-xl border border-warm-200 focus:outline-none focus:ring-2 focus:ring-wood-500 text-sm text-warm-800 bg-warm-50/50"
               >
-                <option value="default">Urutkan: Rekomendasi</option>
+                <option value="default">Urutkan: Terbaru diperbarui</option>
                 <option value="price-asc">Harga: Terendah ke Tertinggi</option>
                 <option value="price-desc">Harga: Tertinggi ke Terendah</option>
               </select>
@@ -197,7 +188,7 @@ export const RumahPanggungPage: React.FC<RumahPanggungPageProps> = ({
         </div>
 
         {/* Counter & Reset */}
-        <div className="flex items-center justify-between text-xs text-warm-600 mb-6">
+        <div className={`flex items-center justify-between text-xs text-warm-600 mb-6 ${houses.length === 0 ? "hidden" : ""}`}>
           <span>
             Total terdaftar: <strong className="text-wood-950 font-bold">{filteredHouses.length}</strong> model rumah panggung
           </span>
@@ -217,7 +208,9 @@ export const RumahPanggungPage: React.FC<RumahPanggungPageProps> = ({
         </div>
 
         {/* Grid List (10 Items per Page) */}
-        {paginatedHouses.length > 0 ? (
+        {catalogLoading ? (
+          <div role="status" className="rounded-2xl bg-white p-8 text-center text-sm text-warm-600">Memuat katalog rumah…</div>
+        ) : paginatedHouses.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {paginatedHouses.map((house) => (
@@ -230,12 +223,12 @@ export const RumahPanggungPage: React.FC<RumahPanggungPageProps> = ({
                     className="relative aspect-[16/10] overflow-hidden bg-wood-100 cursor-pointer"
                     onClick={() => onSelectHouse(house)}
                   >
-                    <img
+                    {house.imageUrl ? <img
                       src={house.imageUrl}
                       alt={house.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
-                    />
+                    /> : <div className="flex h-full items-center justify-center text-wood-600"><Hammer className="h-12 w-12"/></div>}
                     <div className="absolute inset-0 bg-gradient-to-t from-wood-950/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                     {/* Badges */}
@@ -250,7 +243,7 @@ export const RumahPanggungPage: React.FC<RumahPanggungPageProps> = ({
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-900/80 backdrop-blur-md text-amber-200 border border-amber-600">
-                          Upload Warga
+                          Belum diverifikasi
                         </span>
                       )}
                     </div>
@@ -276,12 +269,12 @@ export const RumahPanggungPage: React.FC<RumahPanggungPageProps> = ({
                       </div>
 
                       {/* Title */}
-                      <h3
+                      <button type="button"
                         onClick={() => onSelectHouse(house)}
-                        className="font-serif font-bold text-base sm:text-lg text-wood-950 group-hover:text-wood-700 transition-colors line-clamp-2 cursor-pointer leading-snug"
+                        className="w-full text-left font-serif font-bold text-base sm:text-lg text-wood-950 group-hover:text-wood-700 transition-colors line-clamp-2 leading-snug"
                       >
                         {house.title}
-                      </h3>
+                      </button>
 
                       {/* Specs */}
                       <div className="grid grid-cols-3 gap-1.5 my-3 py-2.5 px-3 rounded-xl bg-warm-50 border border-warm-200 text-center text-xs">
@@ -341,12 +334,12 @@ export const RumahPanggungPage: React.FC<RumahPanggungPageProps> = ({
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => onSelectHouse(house)}
-                          className="w-full py-2 px-3 rounded-xl text-xs font-bold text-wood-900 bg-warm-100 hover:bg-wood-100 border border-wood-300 transition-colors text-center"
+                          className={`w-full py-2 px-3 rounded-xl text-xs font-bold text-wood-900 bg-warm-100 hover:bg-wood-100 border border-wood-300 transition-colors text-center ${house.craftsmanPhone ? "" : "col-span-2"}`}
                         >
                           Detail Spek
                         </button>
 
-                        <a
+                        {house.craftsmanPhone && <a
                           href={getWaLink(house)}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -354,7 +347,7 @@ export const RumahPanggungPage: React.FC<RumahPanggungPageProps> = ({
                         >
                           <MessageCircle className="w-3.5 h-3.5 text-forest-200" />
                           <span>Tanya WA</span>
-                        </a>
+                        </a>}
                       </div>
                     </div>
                   </div>
@@ -377,20 +370,28 @@ export const RumahPanggungPage: React.FC<RumahPanggungPageProps> = ({
         ) : (
           <div className="text-center py-16 bg-white rounded-3xl border border-warm-200 p-8 max-w-lg mx-auto shadow-warm-sm">
             <Hammer className="w-12 h-12 text-warm-400 mx-auto mb-3" />
-            <h4 className="font-serif text-lg font-bold text-warm-900">Model Rumah Tidak Ditemukan</h4>
+            <h4 className="font-serif text-lg font-bold text-warm-900">
+              {houses.length === 0
+                ? "Katalog rumah panggung sedang disiapkan"
+                : "Model Rumah Tidak Ditemukan"}
+            </h4>
             <p className="text-xs text-warm-600 mt-1 mb-4">
-              Coba sesuaikan kata kunci pencarian Anda atau reset filter untuk melihat semua model.
+              {houses.length === 0
+                ? "Listing rumah akan muncul setelah diperbarui dan diverifikasi oleh kelurahan."
+                : "Coba sesuaikan kata kunci pencarian Anda atau reset filter untuk melihat semua model."}
             </p>
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedType('all');
-                setSelectedWood('all');
-              }}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-wood-800 text-white"
-            >
-              Tampilkan Semua Model
-            </button>
+            {houses.length > 0 && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedType('all');
+                  setSelectedWood('all');
+                }}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-wood-800 text-white"
+              >
+                Tampilkan Semua Model
+              </button>
+            )}
           </div>
         )}
 

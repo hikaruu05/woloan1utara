@@ -1,31 +1,9 @@
-import React, { useState } from 'react';
-import { MapPin, Phone, Clock, Send, GraduationCap, Compass } from 'lucide-react';
-import { useData } from '../context/DataContext';
+import React from 'react';
+import { MapPin, Phone, Clock, GraduationCap, Compass } from 'lucide-react';
 
 export const VillageMapAndContact: React.FC = () => {
-  const { showToast } = useData();
-
-  const [senderName, setSenderName] = useState('');
-  const [senderPhone, setSenderPhone] = useState('');
-  const [senderMsg, setSenderMsg] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!senderName.trim() || !senderMsg.trim()) return;
-
-    // Simulate sending message to village admin
-    showToast(
-      'Pesan Terkirim!',
-      'Terima kasih! Pesan/aspirasi Anda telah disampaikan ke pihak Kelurahan Woloan 1 Utara.',
-      'success'
-    );
-    setSenderName('');
-    setSenderPhone('');
-    setSenderMsg('');
-  };
-
   return (
-    <section id="kontak" className="py-16 lg:py-24 bg-warm-100/60 border-t border-wood-200">
+    <section id="kontak" className="scroll-mt-24 py-16 lg:py-24 bg-warm-100/60 border-t border-wood-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
@@ -37,8 +15,7 @@ export const VillageMapAndContact: React.FC = () => {
             Lokasi Kelurahan & Hubungi Kami
           </h2>
           <p className="mt-3 text-warm-700 text-sm sm:text-base leading-relaxed">
-            Kunjungi sentra bengkel rumah panggung terbuka di Woloan 1 Utara atau hubungi perangkat kelurahan 
-            dan tim KKT untuk informasi lebih lanjut.
+            Temukan lokasi kelurahan dan informasi kunjungan di Woloan 1 Utara. Saluran kontak resmi akan dimuat setelah dikonfirmasi.
           </p>
         </div>
 
@@ -92,8 +69,7 @@ export const VillageMapAndContact: React.FC = () => {
                 </div>
                 <h5 className="font-bold text-sm text-warm-900">Jam Pelayanan Kelurahan</h5>
                 <p className="text-xs text-warm-600 mt-1">
-                  Senin s/d Jumat: 08.00 - 16.00 WITA<br />
-                  Sabtu, Minggu & Hari Libur Nasional Tutup
+                  Informasi jam pelayanan akan dimuat setelah dikonfirmasi oleh kelurahan.
                 </p>
               </div>
 
@@ -103,8 +79,7 @@ export const VillageMapAndContact: React.FC = () => {
                 </div>
                 <h5 className="font-bold text-sm text-warm-900">Saluran Kontak</h5>
                 <p className="text-xs text-warm-600 mt-1">
-                  WhatsApp Pelayanan: 0812-4411-XXXX<br />
-                  Email: kel.woloan1utara@tomohon.go.id
+                  Nomor telepon dan email resmi belum tersedia untuk dipublikasikan.
                 </p>
               </div>
             </div>
@@ -112,59 +87,9 @@ export const VillageMapAndContact: React.FC = () => {
 
           {/* Contact / Inquiry Form & KKT Highlight */}
           <div className="lg:col-span-5 space-y-6">
-            {/* Quick Contact Form */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-wood-200 shadow-warm-md">
-              <h3 className="font-serif text-xl font-bold text-wood-950 mb-1">
-                Kirim Pertanyaan & Saran
-              </h3>
-              <p className="text-xs text-warm-600 mb-5">
-                Ada pertanyaan tentang izin usaha, pemesanan rumah panggung, atau produk UMKM? Tuliskan pesan Anda di bawah ini.
-              </p>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-warm-800 mb-1">Nama Lengkap *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Nama Anda"
-                    value={senderName}
-                    onChange={(e) => setSenderName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-warm-200 text-sm text-warm-900 focus:outline-none focus:ring-2 focus:ring-wood-500 bg-warm-50/50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-warm-800 mb-1">Nomor WhatsApp / HP</label>
-                  <input
-                    type="text"
-                    placeholder="08xxxxxxxxxx"
-                    value={senderPhone}
-                    onChange={(e) => setSenderPhone(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-warm-200 text-sm text-warm-900 focus:outline-none focus:ring-2 focus:ring-wood-500 bg-warm-50/50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-warm-800 mb-1">Isi Pesan / Pertanyaan *</label>
-                  <textarea
-                    rows={4}
-                    required
-                    placeholder="Tuliskan pertanyaan mengenai pemesanan rumah panggung, produk UMKM, atau aspirasi kelurahan..."
-                    value={senderMsg}
-                    onChange={(e) => setSenderMsg(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-warm-200 text-sm text-warm-900 focus:outline-none focus:ring-2 focus:ring-wood-500 bg-warm-50/50"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-xl font-bold text-sm text-white bg-wood-800 hover:bg-wood-900 transition-all flex items-center justify-center gap-2 shadow-warm-sm"
-                >
-                  <Send className="w-4 h-4 text-amber-300" />
-                  <span>Kirim Pesan Sekarang</span>
-                </button>
-              </form>
+            <div className="rounded-3xl border border-orange-200 bg-white p-6 shadow-sm sm:p-8">
+              <h3 className="font-serif text-xl font-bold text-wood-950">Informasi Kontak</h3>
+              <p className="mt-2 text-sm leading-6 text-warm-700">Saluran pesan langsung belum tersedia. Kami akan menampilkan kontak kantor setelah petugas mengonfirmasi nomor dan alamat email resmi.</p>
             </div>
 
             {/* KKT Credits Badge Box */}

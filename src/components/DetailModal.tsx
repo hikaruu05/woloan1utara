@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { RumahPanggung, UMKMStore, UMKMProductItem } from '../types';
 import { 
   X, Hammer, Store, MapPin, 
@@ -12,7 +12,6 @@ interface DetailModalProps {
   type: 'house' | 'store' | 'product' | null;
   associatedStore?: UMKMStore | null;
   onClose: () => void;
-  onSelectProductFromStore?: (product: UMKMProductItem, store: UMKMStore) => void;
 }
 
 export const DetailModal: React.FC<DetailModalProps> = ({ 
@@ -20,9 +19,22 @@ export const DetailModal: React.FC<DetailModalProps> = ({
   type, 
   associatedStore,
   onClose,
-  onSelectProductFromStore
 }) => {
   const { showToast } = useData();
+
+  useEffect(() => {
+    if (!item || !type) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [item, type, onClose]);
 
   if (!item || !type) return null;
 
@@ -74,7 +86,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-warm-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+    <div role="dialog" aria-modal="true" aria-label="Detail katalog" className="fixed inset-0 z-50 overflow-y-auto bg-warm-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
       <div 
         className="bg-white rounded-3xl max-w-3xl w-full shadow-warm-lg border border-wood-200 overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
@@ -89,7 +101,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
               </span>
             )}
             {isStore && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-forest-500/20 text-forest-300 border border-forest-500/30">
                 <Store className="w-3.5 h-3.5" />
                 Profil & Katalog Toko UMKM
               </span>
@@ -103,6 +115,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
           </div>
           <button
             onClick={onClose}
+            aria-label="Tutup detail"
             className="p-1.5 rounded-xl bg-wood-800 hover:bg-wood-700 text-wood-300 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
@@ -113,11 +126,11 @@ export const DetailModal: React.FC<DetailModalProps> = ({
         <div className="p-6 overflow-y-auto flex-1 space-y-6">
           {/* Main Visual */}
           <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-wood-100 border border-warm-200">
-            <img
+            {item.imageUrl ? <img
               src={item.imageUrl}
               alt={isHouse ? house?.title : isStore ? store?.name : product?.name}
               className="w-full h-full object-cover"
-            />
+            /> : <div className="flex h-full items-center justify-center text-wood-500"><Package className="h-12 w-12"/></div>}
             <div className="absolute bottom-3 left-3 flex gap-2">
               {'isVerified' in item && item.isVerified && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-forest-900/90 text-forest-200 backdrop-blur-md border border-forest-600">
@@ -414,13 +427,13 @@ export const DetailModal: React.FC<DetailModalProps> = ({
               Tutup
             </button>
 
-            <a
+            {(isHouse ? Boolean(house?.craftsmanPhone) : Boolean(store?.phone)) && <a
               href={getWaLink()}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-forest-700 hover:bg-forest-800 transition-all shadow-warm-sm"
             >
-              <MessageCircle className="w-4 h-4 text-emerald-200" />
+              <MessageCircle className="w-4 h-4 text-forest-200" />
               <span>
                 {isHouse
                   ? 'Hubungi Pengrajin via WhatsApp'
@@ -428,7 +441,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                   ? 'Hubungi Pemilik Toko via WhatsApp'
                   : 'Pesan Produk via WhatsApp'}
               </span>
-            </a>
+            </a>}
           </div>
         </div>
       </div>

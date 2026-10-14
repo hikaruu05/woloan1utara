@@ -11,24 +11,25 @@ import { VillageMapAndContact } from './components/VillageMapAndContact';
 import { RumahPanggungPage } from './components/RumahPanggungPage';
 import { UMKMPage } from './components/UMKMPage';
 import { Footer } from './components/Footer';
-import { UploadModal } from './components/UploadModal';
 import { DetailModal } from './components/DetailModal';
 import { ToastContainer } from './components/ToastContainer';
+import { DestinationsSection } from './components/DestinationsSection';
+import { DestinationsPage } from './components/DestinationsPage';
+import { AdminPage } from './components/AdminPage';
+import { PartnerPage } from './components/PartnerPage';
+import { CatalogShortcuts } from './components/CatalogShortcuts';
 import { RumahPanggung, UMKMStore, UMKMProductItem } from './types';
-import { PlusCircle } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
-  // Current page: 'beranda' | 'katalog-rumah' | 'katalog-umkm'
+  // Halaman portal: beranda, katalog, destinasi, atau admin.
   const [currentPage, setCurrentPage] = useState<string>(() => {
     const hash = window.location.hash.replace('#/', '').replace('#', '');
-    if (hash === 'katalog-rumah' || hash === 'katalog-umkm') {
+    if (['katalog-rumah', 'katalog-umkm', 'katalog-destinasi', 'admin', 'mitra'].includes(hash)) {
       return hash;
     }
     return 'beranda';
   });
 
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
-  
   // Detail modal state
   const [detailItem, setDetailItem] = useState<RumahPanggung | UMKMStore | UMKMProductItem | null>(null);
   const [detailType, setDetailType] = useState<'house' | 'store' | 'product' | null>(null);
@@ -38,7 +39,7 @@ export const AppContent: React.FC = () => {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#/', '').replace('#', '');
-      if (hash === 'katalog-rumah' || hash === 'katalog-umkm') {
+      if (['katalog-rumah', 'katalog-umkm', 'katalog-destinasi', 'admin', 'mitra'].includes(hash)) {
         setCurrentPage(hash);
       } else if (hash === 'beranda' || hash === '') {
         setCurrentPage('beranda');
@@ -49,16 +50,9 @@ export const AppContent: React.FC = () => {
   }, []);
 
   const handleNavigate = (pageOrSectionId: string) => {
-    if (pageOrSectionId === 'katalog-rumah') {
-      setCurrentPage('katalog-rumah');
-      window.location.hash = '/katalog-rumah';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    if (pageOrSectionId === 'katalog-umkm') {
-      setCurrentPage('katalog-umkm');
-      window.location.hash = '/katalog-umkm';
+    if (['katalog-rumah', 'katalog-umkm', 'katalog-destinasi', 'admin', 'mitra'].includes(pageOrSectionId)) {
+      setCurrentPage(pageOrSectionId);
+      window.location.hash = `/${pageOrSectionId}`;
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -117,7 +111,6 @@ export const AppContent: React.FC = () => {
       <Navbar
         currentPage={currentPage}
         onNavigate={handleNavigate}
-        onOpenUpload={() => setIsUploadOpen(true)}
       />
 
       {/* Main Content Pages */}
@@ -129,37 +122,35 @@ export const AppContent: React.FC = () => {
             <div id="beranda">
               <Hero
                 onNavigate={handleNavigate}
-                onOpenUpload={() => setIsUploadOpen(true)}
               />
             </div>
 
-            {/* Profil Kelurahan */}
-            <ProfileKelurahan />
+            <CatalogShortcuts onNavigate={handleNavigate} />
 
-            {/* Speciality & Wood Craftsmanship of Woloan 1 Utara */}
-            <SpecialitySection
-              onNavigateToCatalog={() => handleNavigate('katalog-rumah')}
-            />
+            <DestinationsSection onNavigate={() => handleNavigate('katalog-destinasi')} />
 
             {/* Showcase Cuplikan Rumah Panggung */}
             <RumahPanggungSection
               onSelectHouse={handleSelectHouse}
-              onOpenUpload={() => setIsUploadOpen(true)}
               onNavigateToFullPage={() => handleNavigate('katalog-rumah')}
             />
 
             {/* Showcase Cuplikan Toko UMKM Warga */}
             <UMKMSection
               onSelectStore={handleSelectStore}
-              onOpenUpload={() => setIsUploadOpen(true)}
               onNavigateToFullPage={() => handleNavigate('katalog-umkm')}
             />
 
-            {/* Kalkulator Simulasi Biaya Rumah Panggung */}
-            <CostCalculator />
-
-            {/* Peta Wilayah & Kontak */}
+            {/* Rencanakan kunjungan: peta dan kontak ditempatkan sesudah katalog. */}
             <VillageMapAndContact />
+
+            <ProfileKelurahan />
+
+            <SpecialitySection
+              onNavigateToCatalog={() => handleNavigate('katalog-rumah')}
+            />
+
+            <CostCalculator />
           </>
         )}
 
@@ -167,7 +158,6 @@ export const AppContent: React.FC = () => {
         {currentPage === 'katalog-rumah' && (
           <RumahPanggungPage
             onSelectHouse={handleSelectHouse}
-            onOpenUpload={() => setIsUploadOpen(true)}
             onBackToHome={() => handleNavigate('beranda')}
           />
         )}
@@ -177,22 +167,21 @@ export const AppContent: React.FC = () => {
           <UMKMPage
             onSelectStore={handleSelectStore}
             onSelectProduct={handleSelectProduct}
-            onOpenUpload={() => setIsUploadOpen(true)}
             onBackToHome={() => handleNavigate('beranda')}
           />
         )}
+
+        {currentPage === 'katalog-destinasi' && (
+          <DestinationsPage onBackToHome={() => handleNavigate('beranda')} />
+        )}
+
+        {currentPage === 'admin' && <AdminPage />}
+        {currentPage === 'mitra' && <PartnerPage />}
       </main>
 
       {/* Footer */}
       <Footer
         onNavigate={handleNavigate}
-        onOpenUpload={() => setIsUploadOpen(true)}
-      />
-
-      {/* Upload Modal (Toko UMKM & Rumah Panggung) */}
-      <UploadModal
-        isOpen={isUploadOpen}
-        onClose={() => setIsUploadOpen(false)}
       />
 
       {/* Detail Specification Modal */}
@@ -201,23 +190,11 @@ export const AppContent: React.FC = () => {
         type={detailType}
         associatedStore={associatedStore}
         onClose={handleCloseDetail}
-        onSelectProductFromStore={handleSelectProduct}
       />
 
       {/* Toast Feedback Notifications */}
       <ToastContainer />
 
-      {/* Floating Action Button (Quick Upload) */}
-      <div className="fixed bottom-6 left-6 z-30">
-        <button
-          onClick={() => setIsUploadOpen(true)}
-          className="flex items-center gap-2 px-4 py-3 rounded-full bg-wood-800 text-white shadow-warm-lg hover:bg-wood-900 hover:scale-105 active:scale-95 transition-all text-xs font-bold border border-amber-500/40 group"
-          title="Pasang Toko UMKM atau Rumah Panggung Baru"
-        >
-          <PlusCircle className="w-4 h-4 text-amber-300 group-hover:rotate-90 transition-transform duration-300" />
-          <span className="hidden sm:inline">Upload Usaha / Rumah</span>
-        </button>
-      </div>
     </div>
   );
 };

@@ -1,54 +1,64 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useData } from '../context/DataContext';
-import { UMKMStore, UMKMProductItem } from '../types';
-import { Pagination } from './Pagination';
-import { 
-  Store, Search, MapPin, MessageCircle, 
-  PlusCircle, CheckCircle2, Utensils, 
-  Flower2, Hammer, ExternalLink, ArrowLeft, 
-  Package, Eye, Sparkles 
-} from 'lucide-react';
+import React, { useState, useMemo, useEffect } from "react";
+import { useData } from "../context/DataContext";
+import { UMKMStore, UMKMProductItem } from "../types";
+import { Pagination } from "./Pagination";
+import {
+  Store,
+  Search,
+  MapPin,
+  MessageCircle,
+  CheckCircle2,
+  Utensils,
+  Flower2,
+  Hammer,
+  ExternalLink,
+  ArrowLeft,
+  Package,
+  Eye,
+  Sparkles,
+} from "lucide-react";
 
 interface UMKMPageProps {
   onSelectStore: (store: UMKMStore) => void;
   onSelectProduct: (product: UMKMProductItem, store: UMKMStore) => void;
-  onOpenUpload: () => void;
   onBackToHome: () => void;
 }
 
 export const UMKMPage: React.FC<UMKMPageProps> = ({
   onSelectStore,
   onSelectProduct,
-  onOpenUpload,
-  onBackToHome
+  onBackToHome,
 }) => {
-  const { umkmStores } = useData();
+  const { umkmStores, catalogLoading } = useData();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'stores' | 'products'>('stores');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"stores" | "products">("stores");
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   const ITEMS_PER_PAGE = 10;
 
   const categories = [
-    { id: 'all', label: 'Semua Kategori', icon: Store },
-    { id: 'kerajinan', label: 'Kerajinan Kayu & Souvenir', icon: Hammer },
-    { id: 'kuliner', label: 'Kuliner & Oleh-Oleh', icon: Utensils },
-    { id: 'pertanian', label: 'Pertanian, Kopi & Bunga', icon: Flower2 },
-    { id: 'jasa', label: 'Jasa & Pertukangan', icon: Sparkles }
+    { id: "all", label: "Semua Kategori", icon: Store },
+    { id: "kerajinan", label: "Kerajinan Kayu & Souvenir", icon: Hammer },
+    { id: "kuliner", label: "Kuliner & Oleh-Oleh", icon: Utensils },
+    { id: "pertanian", label: "Pertanian, Kopi & Bunga", icon: Flower2 },
+    { id: "jasa", label: "Jasa & Pertukangan", icon: Sparkles },
   ];
 
   // Filtered stores
   const filteredStores = useMemo(() => {
     return umkmStores.filter((store) => {
-      const matchCategory = selectedCategory === 'all' || store.category === selectedCategory;
+      const matchCategory =
+        selectedCategory === "all" || store.category === selectedCategory;
       const matchSearch =
         store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         store.ownerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         store.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         store.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        store.products.some((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        store.products.some((p) =>
+          p.name.toLowerCase().includes(searchQuery.toLowerCase()),
+        );
 
       return matchCategory && matchSearch;
     });
@@ -59,7 +69,11 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
     const list: { product: UMKMProductItem; store: UMKMStore }[] = [];
     filteredStores.forEach((store) => {
       store.products.forEach((prod) => {
-        if (!searchQuery || prod.name.toLowerCase().includes(searchQuery.toLowerCase()) || prod.description?.toLowerCase().includes(searchQuery.toLowerCase())) {
+        if (
+          !searchQuery ||
+          prod.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          prod.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        ) {
           list.push({ product: prod, store });
         }
       });
@@ -85,19 +99,23 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
 
   const getStoreWaLink = (store: UMKMStore) => {
     const text = encodeURIComponent(
-      `Halo ${store.name} (${store.ownerName}), saya melihat profil usaha Anda di Portal Web Kelurahan Woloan 1 Utara. Saya ingin bertanya mengenai produk dan pemesanan. Terima kasih.`
+      `Halo ${store.name} (${store.ownerName}), saya melihat profil usaha Anda di Portal Web Kelurahan Woloan 1 Utara. Saya ingin bertanya mengenai produk dan pemesanan. Terima kasih.`,
     );
-    const cleanPhone = store.phone.replace(/[^0-9]/g, '');
-    const phone = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
+    const cleanPhone = store.phone.replace(/[^0-9]/g, "");
+    const phone = cleanPhone.startsWith("0")
+      ? "62" + cleanPhone.slice(1)
+      : cleanPhone;
     return `https://wa.me/${phone}?text=${text}`;
   };
 
   const getProductWaLink = (product: UMKMProductItem, store: UMKMStore) => {
     const text = encodeURIComponent(
-      `Halo ${store.name}, saya tertarik memesan produk "${product.name}" (${product.price}) dari etalase UMKM Web Woloan 1 Utara. Apakah produk ini tersedia? Terima kasih.`
+      `Halo ${store.name}, saya tertarik memesan produk "${product.name}" (${product.price}) dari etalase UMKM Web Woloan 1 Utara. Apakah produk ini tersedia? Terima kasih.`,
     );
-    const cleanPhone = store.phone.replace(/[^0-9]/g, '');
-    const phone = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
+    const cleanPhone = store.phone.replace(/[^0-9]/g, "");
+    const phone = cleanPhone.startsWith("0")
+      ? "62" + cleanPhone.slice(1)
+      : cleanPhone;
     return `https://wa.me/${phone}?text=${text}`;
   };
 
@@ -115,51 +133,45 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
           </button>
 
           <div className="text-xs text-warm-500 hidden sm:block">
-            <span>Beranda</span> &gt; <strong className="text-forest-900 font-bold">Direktori Toko & Produk UMKM</strong>
+            <span>Beranda</span> &gt;{" "}
+            <strong className="text-forest-900 font-bold">
+              Direktori Toko & Produk UMKM
+            </strong>
           </div>
         </div>
 
         {/* Page Banner Header */}
         <div className="bg-gradient-to-r from-forest-950 via-forest-900 to-forest-950 text-white rounded-3xl p-6 sm:p-8 lg:p-10 shadow-warm-lg border border-forest-800 mb-8 relative overflow-hidden">
-          <div className="absolute right-0 top-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl transform translate-x-20 -translate-y-20 pointer-events-none" />
+          <div className="absolute right-0 top-0 w-80 h-80 bg-forest-500/10 rounded-full blur-3xl transform translate-x-20 -translate-y-20 pointer-events-none" />
 
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="max-w-3xl">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold mb-3 border border-emerald-500/30">
-                <Store className="w-3.5 h-3.5" />
-                <span>DIREKTORI UMKM BERBASIS TOKO & LOKASI GOOGLE MAPS</span>
-              </span>
+              <Store className="w-3.5 h-3.5" />
               <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
                 Sentra Usaha & Toko UMKM Woloan 1 Utara
               </h1>
               <p className="mt-2.5 text-forest-200 text-xs sm:text-sm lg:text-base leading-relaxed">
-                Jelajahi etalase usaha warga Woloan 1 Utara per toko. Dilengkapi titik alamat Google Maps, 
-                daftar produk per unit usaha, serta pemesanan langsung ke WhatsApp pemilik toko.
+                Jelajahi etalase usaha warga Woloan 1 Utara per toko. Dilengkapi
+                titik alamat Google Maps, daftar produk per unit usaha, serta
+                pemesanan langsung ke WhatsApp pemilik toko.
               </p>
             </div>
 
-            <button
-              onClick={onOpenUpload}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm text-forest-950 bg-emerald-400 hover:bg-emerald-300 shadow-warm-md hover:scale-[1.02] active:scale-[0.98] transition-all self-start md:self-auto shrink-0"
-            >
-              <PlusCircle className="w-4 h-4 text-forest-950" />
-              <span>+ Daftarkan Toko UMKM</span>
-            </button>
           </div>
         </div>
 
         {/* Filters, View Toggle & Search Bar */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-warm-sm border border-wood-200 mb-8 space-y-4">
+        <div className={`bg-white rounded-2xl p-4 sm:p-5 shadow-warm-sm border border-wood-200 mb-8 space-y-4 ${umkmStores.length === 0 ? "hidden" : ""}`}>
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             {/* View Mode Switcher: Toko vs Produk */}
             <div className="flex items-center p-1 bg-warm-100 rounded-xl self-start border border-warm-200">
               <button
                 type="button"
-                onClick={() => setViewMode('stores')}
+                onClick={() => setViewMode("stores")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                  viewMode === 'stores'
-                    ? 'bg-forest-800 text-white shadow-xs'
-                    : 'text-warm-700 hover:text-warm-950'
+                  viewMode === "stores"
+                    ? "bg-forest-800 text-white shadow-xs"
+                    : "text-warm-700 hover:text-warm-950"
                 }`}
               >
                 <Store className="w-3.5 h-3.5" />
@@ -168,11 +180,11 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
 
               <button
                 type="button"
-                onClick={() => setViewMode('products')}
+                onClick={() => setViewMode("products")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                  viewMode === 'products'
-                    ? 'bg-forest-800 text-white shadow-xs'
-                    : 'text-warm-700 hover:text-warm-950'
+                  viewMode === "products"
+                    ? "bg-forest-800 text-white shadow-xs"
+                    : "text-warm-700 hover:text-warm-950"
                 }`}
               >
                 <Package className="w-3.5 h-3.5" />
@@ -185,10 +197,11 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
               <Search className="w-4 h-4 text-warm-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
+                aria-label={viewMode === "stores" ? "Cari toko, pemilik, atau produk" : "Cari produk"}
                 placeholder={
-                  viewMode === 'stores'
-                    ? 'Cari nama toko, pemilik, atau produk...'
-                    : 'Cari klappertaart, souvenir kayu, kopi...'
+                  viewMode === "stores"
+                    ? "Cari nama toko, pemilik, atau produk..."
+                    : "Cari klappertaart, souvenir kayu, kopi..."
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -208,11 +221,13 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                     isSelected
-                      ? 'bg-forest-800 text-white shadow-xs font-bold'
-                      : 'bg-warm-100 text-warm-700 hover:bg-forest-50 hover:text-forest-900'
+                      ? "bg-forest-800 text-white shadow-xs font-bold"
+                      : "bg-warm-100 text-warm-700 hover:bg-forest-50 hover:text-forest-900"
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-300' : 'text-warm-500'}`} />
+                  <Icon
+                    className={`w-3.5 h-3.5 ${isSelected ? "text-amber-300" : "text-warm-500"}`}
+                  />
                   <span>{cat.label}</span>
                 </button>
               );
@@ -221,24 +236,32 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
         </div>
 
         {/* Counter Info */}
-        <div className="flex items-center justify-between text-xs text-warm-600 mb-6">
+        <div className={`flex items-center justify-between text-xs text-warm-600 mb-6 ${umkmStores.length === 0 ? "hidden" : ""}`}>
           <span>
-            {viewMode === 'stores' ? (
+            {viewMode === "stores" ? (
               <>
-                Menampilkan <strong className="text-forest-950 font-bold">{filteredStores.length}</strong> toko UMKM di Woloan 1 Utara
+                Menampilkan{" "}
+                <strong className="text-forest-950 font-bold">
+                  {filteredStores.length}
+                </strong>{" "}
+                toko UMKM di Woloan 1 Utara
               </>
             ) : (
               <>
-                Menampilkan <strong className="text-forest-950 font-bold">{allProductsWithStore.length}</strong> produk dari seluruh toko
+                Menampilkan{" "}
+                <strong className="text-forest-950 font-bold">
+                  {allProductsWithStore.length}
+                </strong>{" "}
+                produk dari seluruh toko
               </>
             )}
           </span>
 
-          {(searchQuery || selectedCategory !== 'all') && (
+          {(searchQuery || selectedCategory !== "all") && (
             <button
               onClick={() => {
-                setSearchQuery('');
-                setSelectedCategory('all');
+                setSearchQuery("");
+                setSelectedCategory("all");
               }}
               className="text-forest-700 hover:underline font-bold"
             >
@@ -248,7 +271,7 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
         </div>
 
         {/* ================= VIEW MODE 1: PER TOKO (STORE-BASED) ================= */}
-        {viewMode === 'stores' && (
+        {catalogLoading ? <div role="status" className="rounded-2xl bg-white p-8 text-center text-sm text-warm-600">Memuat katalog UMKM…</div> : viewMode === "stores" && (
           <>
             {paginatedStores.length > 0 ? (
               <>
@@ -263,12 +286,12 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                         className="relative aspect-[16/10] overflow-hidden bg-wood-100 cursor-pointer shrink-0"
                         onClick={() => onSelectStore(store)}
                       >
-                        <img
+                        {store.imageUrl ? <img
                           src={store.imageUrl}
                           alt={store.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           loading="lazy"
-                        />
+                        /> : <div className="flex h-full items-center justify-center text-forest-700"><Store className="h-10 w-10"/></div>}
                         <div className="absolute inset-0 bg-gradient-to-t from-wood-950/75 via-transparent to-transparent" />
 
                         {/* Badges */}
@@ -285,7 +308,7 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-900/85 backdrop-blur-md text-amber-200 border border-amber-600">
-                              Upload Warga
+                              Belum diverifikasi
                             </span>
                           )}
                         </div>
@@ -306,16 +329,19 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                               {store.category}
                             </span>
                             <span className="text-[11px] text-warm-500 truncate max-w-[150px]">
-                              Pemilik: <strong className="text-warm-800">{store.ownerName}</strong>
+                              Pemilik:{" "}
+                              <strong className="text-warm-800">
+                                {store.ownerName}
+                              </strong>
                             </span>
                           </div>
 
-                          <h3
+                          <button type="button"
                             onClick={() => onSelectStore(store)}
-                            className="font-serif font-bold text-base sm:text-lg text-wood-950 group-hover:text-forest-800 transition-colors cursor-pointer leading-snug mt-1 line-clamp-1 min-h-[1.5rem]"
+                            className="mt-1 min-h-[1.5rem] w-full text-left font-serif font-bold text-base sm:text-lg text-wood-950 group-hover:text-forest-800 transition-colors leading-snug line-clamp-1"
                           >
                             {store.name}
-                          </h3>
+                          </button>
 
                           <p className="text-xs text-warm-600 mt-1.5 line-clamp-2 leading-relaxed min-h-[2rem]">
                             {store.description}
@@ -342,7 +368,9 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                                 <ExternalLink className="w-2.5 h-2.5" />
                               </a>
                             ) : (
-                              <span className="text-[10px] text-warm-400">Maps -</span>
+                              <span className="text-[10px] text-warm-400">
+                                Maps -
+                              </span>
                             )}
                           </div>
 
@@ -380,7 +408,7 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                             <span>Katalog Toko</span>
                           </button>
 
-                          <a
+                          {store.phone && <a
                             href={getStoreWaLink(store)}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -388,7 +416,7 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                           >
                             <MessageCircle className="w-3.5 h-3.5 text-forest-200" />
                             <span>WA Toko</span>
-                          </a>
+                          </a>}
                         </div>
                       </div>
                     </div>
@@ -402,7 +430,7 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                   itemsPerPage={ITEMS_PER_PAGE}
                   onPageChange={(page) => {
                     setCurrentPage(page);
-                    window.scrollTo({ top: 350, behavior: 'smooth' });
+                    window.scrollTo({ top: 350, behavior: "smooth" });
                   }}
                   itemName="toko UMKM"
                 />
@@ -410,23 +438,20 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
             ) : (
               <div className="text-center py-16 bg-white rounded-3xl border border-warm-200 p-8 max-w-lg mx-auto shadow-warm-sm">
                 <Store className="w-12 h-12 text-warm-400 mx-auto mb-3" />
-                <h4 className="font-serif text-lg font-bold text-warm-900">Toko UMKM Tidak Ditemukan</h4>
+                <h4 className="font-serif text-lg font-bold text-warm-900">
+                  Toko UMKM Tidak Ditemukan
+                </h4>
                 <p className="text-xs text-warm-600 mt-1 mb-4">
-                  Belum ada toko yang sesuai dengan pencarian atau filter yang dipilih.
+                  Belum ada toko yang sesuai dengan pencarian atau filter yang
+                  dipilih.
                 </p>
-                <button
-                  onClick={onOpenUpload}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-forest-700 text-white"
-                >
-                  + Daftarkan Toko Anda
-                </button>
               </div>
             )}
           </>
         )}
 
         {/* ================= VIEW MODE 2: PER PRODUK (10 PRODUK PER HALAMAN) ================= */}
-        {viewMode === 'products' && (
+        {!catalogLoading && viewMode === "products" && (
           <>
             {paginatedProducts.length > 0 ? (
               <>
@@ -441,12 +466,12 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                         className="relative aspect-[4/3] overflow-hidden bg-wood-100 cursor-pointer shrink-0"
                         onClick={() => onSelectProduct(product, store)}
                       >
-                        <img
+                        {product.imageUrl ? <img
                           src={product.imageUrl}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           loading="lazy"
-                        />
+                        /> : <div className="flex h-full items-center justify-center text-wood-600"><Package className="h-10 w-10"/></div>}
                         <div className="absolute top-3 left-3 bg-forest-900/85 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                           {store.category}
                         </div>
@@ -456,28 +481,31 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                       <div className="p-5 flex-1 flex flex-col justify-between">
                         <div>
                           {/* Store attribution */}
-                          <div
+                          <button type="button"
                             onClick={() => onSelectStore(store)}
-                            className="flex items-center gap-1.5 text-xs text-forest-700 font-bold hover:underline cursor-pointer mb-1 truncate"
+                            className="mb-1 flex items-center gap-1.5 truncate text-left text-xs font-bold text-forest-700 hover:underline"
                           >
                             <Store className="w-3.5 h-3.5 shrink-0" />
                             <span className="truncate">{store.name}</span>
-                          </div>
+                          </button>
 
-                          <h3
+                          <button type="button"
                             onClick={() => onSelectProduct(product, store)}
-                            className="font-serif font-bold text-base text-wood-950 group-hover:text-forest-800 transition-colors line-clamp-2 cursor-pointer leading-snug min-h-[2.5rem]"
+                            className="min-h-[2.5rem] w-full text-left font-serif font-bold text-base text-wood-950 group-hover:text-forest-800 transition-colors line-clamp-2 leading-snug"
                           >
                             {product.name}
-                          </h3>
+                          </button>
 
                           <p className="text-xs text-warm-600 mt-1 line-clamp-2 leading-relaxed min-h-[2rem]">
-                            {product.description || 'Produk unggulan dari perajin / UMKM Woloan 1 Utara.'}
+                            {product.description ||
+                              "Lihat detail atau hubungi toko untuk informasi produk."}
                           </p>
 
                           {/* Address & Maps */}
                           <div className="flex items-center justify-between text-[11px] text-warm-600 mt-3 pt-3 border-t border-warm-100">
-                            <span className="truncate max-w-[190px]">{store.address}</span>
+                            <span className="truncate max-w-[190px]">
+                              {store.address}
+                            </span>
                             {store.mapsUrl && (
                               <a
                                 href={store.mapsUrl}
@@ -496,12 +524,16 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                         {/* Price & Action */}
                         <div className="mt-4 pt-3 border-t border-warm-200 flex items-center justify-between gap-2">
                           <div>
-                            <span className="text-[10px] text-warm-500 block font-bold uppercase">Harga:</span>
+                            <span className="text-[10px] text-warm-500 block font-bold uppercase">
+                              Harga:
+                            </span>
                             <span className="font-serif text-base font-bold text-forest-900">
-                              {product.price}
+                              {product.price || "Hubungi penjual"}
                             </span>
                             {product.unit && (
-                              <span className="text-[10px] text-warm-500 ml-1">({product.unit})</span>
+                              <span className="text-[10px] text-warm-500 ml-1">
+                                ({product.unit})
+                              </span>
                             )}
                           </div>
 
@@ -527,7 +559,7 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                   itemsPerPage={ITEMS_PER_PAGE}
                   onPageChange={(page) => {
                     setCurrentPage(page);
-                    window.scrollTo({ top: 350, behavior: 'smooth' });
+                    window.scrollTo({ top: 350, behavior: "smooth" });
                   }}
                   itemName="produk UMKM"
                 />
@@ -535,12 +567,14 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
             ) : (
               <div className="text-center py-16 bg-white rounded-3xl border border-warm-200 p-8 max-w-lg mx-auto shadow-warm-sm">
                 <Package className="w-12 h-12 text-warm-400 mx-auto mb-3" />
-                <h4 className="font-serif text-lg font-bold text-warm-900">Produk Tidak Ditemukan</h4>
+                <h4 className="font-serif text-lg font-bold text-warm-900">
+                  {umkmStores.length === 0 ? "Informasi UMKM sedang disiapkan" : allProductsWithStore.length === 0 && !searchQuery ? "Belum ada produk di etalase" : "Produk tidak ditemukan"}
+                </h4>
                 <p className="text-xs text-warm-600 mt-1 mb-4">
-                  Coba sesuaikan kata kunci pencarian Anda.
+                  {umkmStores.length === 0 ? "Daftar toko dan produk akan ditampilkan setelah diperbarui serta dikonfirmasi kelurahan." : allProductsWithStore.length === 0 && !searchQuery ? "Petugas kelurahan belum menambahkan produk untuk toko yang terdaftar." : "Coba ubah kata kunci atau kategori untuk melihat hasil lainnya."}
                 </p>
                 <button
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => setSearchQuery("")}
                   className="px-5 py-2.5 rounded-xl text-xs font-bold bg-forest-700 text-white"
                 >
                   Tampilkan Semua Produk

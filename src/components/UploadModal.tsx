@@ -13,7 +13,7 @@ interface UploadModalProps {
 }
 
 export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
-  const { addHouse, addStore } = useData();
+  const { addHouse, addStore, staffManaged } = useData();
 
   const [activeForm, setActiveForm] = useState<'house' | 'store'>('store');
 
@@ -47,7 +47,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => 
   const [storeAddress, setStoreAddress] = useState('Lingkungan I, Woloan 1 Utara');
   const [storeMapsUrl, setStoreMapsUrl] = useState('');
   const [storeDesc, setStoreDesc] = useState('');
-  const [storeBadge, setStoreBadge] = useState('Produk Unggulan Woloan');
+  const storeBadge = 'Produk Unggulan Woloan';
   const [storeImage, setStoreImage] = useState(
     'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=800&q=80'
   );
@@ -60,11 +60,27 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => 
       priceNum: 0,
       unit: 'per pcs / kemasan',
       description: '',
-      imageUrl: 'https://images.unsplash.com/photo-1587314168485-3236d6710814?auto=format&fit=crop&w=800&q=80'
+      imageUrl: ''
     }
   ]);
 
   if (!isOpen) return null;
+
+  if (staffManaged) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-warm-950/75 p-4 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-3xl border border-wood-200 bg-white p-6 shadow-warm-lg">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-serif text-xl font-bold text-wood-950">Katalog dikelola kelurahan</h3>
+            <button onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-warm-700 hover:bg-warm-100">Tutup</button>
+          </div>
+          <p className="text-sm leading-relaxed text-warm-700">
+            Agar informasi yang tampil tetap terverifikasi, listing rumah dan UMKM diperbarui oleh petugas kelurahan. Silakan hubungi kantor kelurahan untuk menambahkan atau memperbaiki informasi.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // File to base64 preview handler
   const handleFileChange = (
@@ -177,17 +193,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => 
       description: storeDesc || `Unit usaha ${storeName} di Woloan 1 Utara.`,
       imageUrl: storeImage,
       badge: storeBadge,
-      products: validProducts.length > 0 ? validProducts : [
-        {
-          id: 'prod-' + Date.now(),
-          name: 'Produk Utama ' + storeName,
-          price: 'Hubungi Penjual',
-          priceNum: 0,
-          unit: 'per unit',
-          description: storeDesc,
-          imageUrl: storeImage
-        }
-      ]
+      products: validProducts
     });
 
     onClose();
@@ -543,7 +549,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => 
                   type="submit"
                   className="w-full py-3.5 rounded-xl bg-forest-800 hover:bg-forest-900 text-white font-bold text-sm shadow-warm-md flex items-center justify-center gap-2"
                 >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                  <CheckCircle2 className="w-4 h-4 text-forest-300" />
                   <span>Daftarkan Toko UMKM & Produk ke Portal</span>
                 </button>
               </div>

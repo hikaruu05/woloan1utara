@@ -1,0 +1,7 @@
+project_id = "woloan1utara"
+
+[functions.create-partner-account]
+verify_jwt = true
+
+[functions.change-partner-password]
+verify_jwt = true
