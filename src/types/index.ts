@@ -55,8 +55,12 @@ export interface UMKMStore {
 export type DestinationCategory =
   | "alam"
   | "budaya"
+  | "sejarah"
   | "kuliner"
-  | "kerajinan"
+  | "edukasi"
+  | "religi"
+  | "agrowisata"
+  | "kerajinan" // Nilai lama agar data destinasi yang sudah tersimpan tetap terbaca.
   | "lainnya";
 
 export interface TravelDestination {

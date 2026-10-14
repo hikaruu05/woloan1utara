@@ -4,8 +4,9 @@ import { TravelDestination } from "../types";
 import { useData } from "../context/DataContext";
 
 const categoryLabels: Record<string, string> = {
-  semua: "Semua kategori", alam: "Alam", budaya: "Budaya", kuliner: "Kuliner",
-  kerajinan: "Kerajinan", lainnya: "Lainnya",
+  semua: "Semua kategori", alam: "Wisata alam", budaya: "Budaya", sejarah: "Sejarah",
+  kuliner: "Wisata kuliner", edukasi: "Edukasi", religi: "Wisata religi",
+  agrowisata: "Agrowisata", kerajinan: "Kerajinan lokal", lainnya: "Lainnya",
 };
 
 export const DestinationsPage: React.FC<{ onBackToHome: () => void }> = ({ onBackToHome }) => {
