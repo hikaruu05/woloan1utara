@@ -64,7 +64,7 @@ Deno.serve(async (request) => {
   if (authError || !user) return reply(401, { error: "Sesi tidak valid. Silakan masuk kembali." });
 
   const { data: owner, error: ownerError } = await adminClient
-    .from("store_owners")
+    .from("partner_accounts")
     .select("user_id, must_change_password")
     .eq("user_id", user.id)
     .maybeSingle();
@@ -84,7 +84,7 @@ Deno.serve(async (request) => {
   }
 
   const { data: updatedOwner, error: updateError } = await adminClient
-    .from("store_owners")
+    .from("partner_accounts")
     .update({ must_change_password: false })
     .eq("user_id", user.id)
     .eq("must_change_password", true)

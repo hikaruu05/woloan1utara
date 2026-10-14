@@ -69,8 +69,8 @@ drop policy if exists "admins delete catalog images" on storage.objects;
 create policy "admins delete catalog images" on storage.objects
   for delete to authenticated using (bucket_id = 'catalog' and (select public.is_portal_admin()));
 
--- Partner accounts are created by staff, then linked to one verified UMKM.
--- Partners can submit proposed edits; only the review RPC can change the public listing.
+-- Legacy UMKM account tables are retained for compatibility; active portal access
+-- uses partner_accounts and partner_submissions for all three catalog types.
 create table if not exists public.store_owners (
   store_id uuid primary key references public.stores(id) on delete cascade,
   user_id uuid not null unique references auth.users(id) on delete cascade,
@@ -173,6 +173,201 @@ revoke all on function public.reject_store_submission(uuid, text) from public, a
 grant execute on function public.approve_store_submission(uuid) to authenticated;
 grant execute on function public.reject_store_submission(uuid, text) to authenticated;
 
+create table if not exists public.partner_accounts (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  listing_kind text not null check (listing_kind in ('houses','stores','destinations')),
+  listing_id uuid not null,
+  must_change_password boolean not null default true,
+  created_at timestamptz not null default now(),
+  unique (listing_kind, listing_id)
+);
+alter table public.partner_accounts alter column listing_id drop not null;
+insert into public.partner_accounts(user_id, listing_kind, listing_id, must_change_password)
+select user_id, 'stores', store_id, must_change_password from public.store_owners
+on conflict (user_id) do nothing;
+-- Remove legacy ownership links after migration so their older RLS policies
+-- cannot continue granting access after a partner link is revoked.
+delete from public.store_owners;
+
+-- Used only by the service-role Edge Function to reconnect an Auth user after
+-- an admin removes a partner listing link. Never expose this lookup to clients.
+create or replace function public.lookup_auth_user_id_by_email(target_email text)
+returns uuid language sql stable security definer set search_path = '' as $$
+  select u.id from auth.users u where lower(u.email) = lower(target_email) limit 1;
+$$;
+revoke all on function public.lookup_auth_user_id_by_email(text) from public, anon, authenticated;
+grant execute on function public.lookup_auth_user_id_by_email(text) to service_role;
+
+create table if not exists public.partner_submissions (
+  id uuid primary key default gen_random_uuid(),
+  listing_kind text not null check (listing_kind in ('houses','stores','destinations')),
+  listing_id uuid not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  payload jsonb not null,
+  status text not null default 'pending' check (status in ('pending','approved','rejected')),
+  review_note text,
+  created_at timestamptz not null default now(),
+  reviewed_at timestamptz,
+  reviewed_by uuid references auth.users(id) on delete set null,
+  constraint partner_submission_payload_id_matches check ((payload->>'id') = listing_id::text)
+);
+create index if not exists partner_submissions_listing_created_idx on public.partner_submissions (listing_kind, listing_id, created_at desc);
+create unique index if not exists one_pending_partner_submission_per_listing on public.partner_submissions (listing_kind, listing_id) where status = 'pending';
+
+-- Do not leave active partner accounts pointing to a missing listing. Linked
+-- listings must be unlinked before deletion or archiving.
+create or replace function public.guard_partner_listing_lifecycle()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare listing_kind text := TG_TABLE_NAME;
+begin
+  if TG_OP = 'DELETE' then
+    if exists (select 1 from public.partner_accounts a where a.listing_kind = listing_kind and a.listing_id = OLD.id) then
+      raise exception 'Listing ini masih terhubung ke akun mitra. Cabut tautan akun sebelum menghapus listing.' using errcode = '23503';
+    end if;
+    delete from public.partner_submissions s where s.listing_kind = listing_kind and s.listing_id = OLD.id;
+    return OLD;
+  end if;
+  if NEW.status = 'archived' and OLD.status <> 'archived'
+     and exists (select 1 from public.partner_accounts a where a.listing_kind = listing_kind and a.listing_id = NEW.id) then
+    raise exception 'Listing ini masih dikelola akun mitra. Cabut tautan akun sebelum mengarsipkan listing.' using errcode = '23514';
+  end if;
+  return NEW;
+end;
+$$;
+revoke all on function public.guard_partner_listing_lifecycle() from public, anon, authenticated;
+drop trigger if exists guard_partner_house_lifecycle on public.houses;
+create trigger guard_partner_house_lifecycle before update of status or delete on public.houses for each row execute function public.guard_partner_listing_lifecycle();
+drop trigger if exists guard_partner_store_lifecycle on public.stores;
+create trigger guard_partner_store_lifecycle before update of status or delete on public.stores for each row execute function public.guard_partner_listing_lifecycle();
+drop trigger if exists guard_partner_destination_lifecycle on public.destinations;
+create trigger guard_partner_destination_lifecycle before update of status or delete on public.destinations for each row execute function public.guard_partner_listing_lifecycle();
+
+alter table public.partner_accounts enable row level security;
+alter table public.partner_submissions enable row level security;
+
+create or replace function public.is_partner_owner(target_kind text, target_id uuid)
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.partner_accounts a where a.user_id = (select auth.uid()) and a.listing_kind = target_kind and a.listing_id = target_id);
+$$;
+create or replace function public.is_partner_password_setup_pending()
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from public.partner_accounts a where a.user_id = (select auth.uid()) and a.must_change_password);
+$$;
+revoke all on function public.is_partner_owner(text, uuid) from public, anon;
+grant execute on function public.is_partner_owner(text, uuid) to authenticated;
+revoke all on function public.is_partner_password_setup_pending() from public, anon;
+grant execute on function public.is_partner_password_setup_pending() to authenticated;
+
+drop policy if exists "partners read own account" on public.partner_accounts;
+create policy "partners read own account" on public.partner_accounts for select to authenticated using (user_id = (select auth.uid()) or (select public.is_portal_admin()));
+drop policy if exists "admins manage partner accounts" on public.partner_accounts;
+create policy "admins manage partner accounts" on public.partner_accounts for all to authenticated using ((select public.is_portal_admin())) with check ((select public.is_portal_admin()));
+grant select on public.partner_accounts to authenticated;
+grant insert, update, delete on public.partner_accounts to authenticated;
+
+do $$
+declare table_name text;
+begin
+  foreach table_name in array array['houses','stores','destinations'] loop
+    execute format('drop policy if exists "partners read own %1$s" on public.%1$I', table_name);
+    execute format('create policy "partners read own %1$s" on public.%1$I for select to authenticated using ((select public.is_partner_owner(''%1$s'', id)))', table_name);
+  end loop;
+end $$;
+
+drop policy if exists "partners read own submissions" on public.partner_submissions;
+create policy "partners read own submissions" on public.partner_submissions for select to authenticated
+  using (user_id = (select auth.uid()) and (select public.is_partner_owner(listing_kind, listing_id)));
+drop policy if exists "partners submit listing changes" on public.partner_submissions;
+create policy "partners submit listing changes" on public.partner_submissions for insert to authenticated with check (
+  user_id = (select auth.uid()) and (select public.is_partner_owner(listing_kind, listing_id))
+  and not (select public.is_partner_password_setup_pending()) and status = 'pending'
+  and reviewed_at is null and reviewed_by is null
+);
+drop policy if exists "admins manage partner submissions" on public.partner_submissions;
+create policy "admins manage partner submissions" on public.partner_submissions for all to authenticated using ((select public.is_portal_admin())) with check ((select public.is_portal_admin()));
+revoke all on public.partner_submissions from anon, authenticated;
+grant select, insert on public.partner_submissions to authenticated;
+
+create or replace function public.approve_partner_submission(p_submission_id uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+declare
+  submission public.partner_submissions%rowtype;
+  listing_status text;
+begin
+  if not (select public.is_portal_admin()) then raise exception 'Akses petugas diperlukan.' using errcode = '42501'; end if;
+  select * into submission from public.partner_submissions where id = p_submission_id for update;
+  if not found or submission.status <> 'pending' then raise exception 'Pengajuan tidak ditemukan atau sudah ditinjau.' using errcode = 'P0002'; end if;
+  if submission.listing_kind = 'houses' then select status into listing_status from public.houses where id = submission.listing_id;
+  elsif submission.listing_kind = 'stores' then select status into listing_status from public.stores where id = submission.listing_id;
+  elsif submission.listing_kind = 'destinations' then select status into listing_status from public.destinations where id = submission.listing_id;
+  else raise exception 'Jenis katalog tidak valid.' using errcode = '22023'; end if;
+  if listing_status is null then raise exception 'Listing sudah tidak tersedia.' using errcode = 'P0002'; end if;
+  if listing_status = 'archived' then raise exception 'Pulihkan listing sebagai draf sebelum menyetujui pengajuan.' using errcode = '23514'; end if;
+  if submission.listing_kind = 'houses' then update public.houses set payload = submission.payload, status = 'published', updated_at = now() where id = submission.listing_id;
+  elsif submission.listing_kind = 'stores' then update public.stores set payload = submission.payload, status = 'published', updated_at = now() where id = submission.listing_id;
+  elsif submission.listing_kind = 'destinations' then update public.destinations set payload = submission.payload, status = 'published', updated_at = now() where id = submission.listing_id;
+  else raise exception 'Jenis katalog tidak valid.' using errcode = '22023'; end if;
+  update public.partner_submissions set status = 'approved', reviewed_at = now(), reviewed_by = (select auth.uid()), review_note = null where id = p_submission_id;
+end;
+$$;
+create or replace function public.reject_partner_submission(p_submission_id uuid, p_review_note text default '')
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  if not (select public.is_portal_admin()) then raise exception 'Akses petugas diperlukan.' using errcode = '42501'; end if;
+  update public.partner_submissions set status = 'rejected', reviewed_at = now(), reviewed_by = (select auth.uid()), review_note = left(coalesce(p_review_note, ''), 1000)
+  where id = p_submission_id and status = 'pending';
+  if not found then raise exception 'Pengajuan tidak ditemukan atau sudah ditinjau.' using errcode = 'P0002'; end if;
+end;
+$$;
+revoke all on function public.approve_partner_submission(uuid) from public, anon;
+revoke all on function public.reject_partner_submission(uuid, text) from public, anon;
+grant execute on function public.approve_partner_submission(uuid) to authenticated;
+grant execute on function public.reject_partner_submission(uuid, text) to authenticated;
+
+-- A newly provisioned partner account has a catalog type but no listing.
+-- The partner creates the first draft; its initial submission remains pending
+-- until an administrator approves it.
+create or replace function public.create_partner_listing_submission(p_payload jsonb)
+returns uuid language plpgsql security definer set search_path = '' as $$
+declare
+  account public.partner_accounts%rowtype;
+  new_listing_id uuid := gen_random_uuid();
+  normalized_payload jsonb;
+  listing_name text;
+begin
+  if (select auth.uid()) is null then raise exception 'Sesi mitra diperlukan.' using errcode = '42501'; end if;
+  if p_payload is null or jsonb_typeof(p_payload) <> 'object' then raise exception 'Data listing tidak valid.' using errcode = '22023'; end if;
+  select * into account from public.partner_accounts where user_id = (select auth.uid()) for update;
+  if not found then raise exception 'Akun ini bukan akun mitra.' using errcode = '42501'; end if;
+  if account.must_change_password then raise exception 'Ganti kata sandi sementara sebelum membuat listing.' using errcode = '42501'; end if;
+  if account.listing_id is not null then raise exception 'Akun mitra ini sudah memiliki listing.' using errcode = '23505'; end if;
+  listing_name := btrim(coalesce(p_payload->>'name', p_payload->>'title', ''));
+  if listing_name = '' then raise exception 'Nama listing wajib diisi.' using errcode = '22023'; end if;
+  if account.listing_kind = 'stores' then
+    if coalesce(jsonb_typeof(p_payload->'products') <> 'array', true) then
+      raise exception 'Data produk tidak valid.' using errcode = '22023';
+    end if;
+    if jsonb_array_length(p_payload->'products') = 0 then
+      raise exception 'Tambahkan minimal satu produk sebelum mengirim usaha.' using errcode = '22023';
+    end if;
+  end if;
+  normalized_payload := p_payload || jsonb_build_object('id', new_listing_id, 'isVerified', false);
+  if account.listing_kind = 'houses' then
+    insert into public.houses(id, payload, status) values (new_listing_id, normalized_payload, 'draft');
+  elsif account.listing_kind = 'stores' then
+    insert into public.stores(id, payload, status) values (new_listing_id, normalized_payload, 'draft');
+  elsif account.listing_kind = 'destinations' then
+    insert into public.destinations(id, payload, status) values (new_listing_id, normalized_payload, 'draft');
+  else raise exception 'Jenis katalog akun tidak valid.' using errcode = '22023'; end if;
+  update public.partner_accounts set listing_id = new_listing_id where user_id = (select auth.uid());
+  insert into public.partner_submissions(listing_kind, listing_id, user_id, payload, status)
+  values (account.listing_kind, new_listing_id, (select auth.uid()), normalized_payload, 'pending');
+  return new_listing_id;
+end;
+$$;
+revoke all on function public.create_partner_listing_submission(jsonb) from public, anon;
+grant execute on function public.create_partner_listing_submission(jsonb) to authenticated;
+
 -- Public bucket objects are publicly readable. Partners may only add new files to their own prefix.
 drop policy if exists "partners upload own store images" on storage.objects;
 create policy "partners upload own store images" on storage.objects
@@ -180,7 +375,7 @@ create policy "partners upload own store images" on storage.objects
     bucket_id = 'catalog' and (storage.foldername(name))[1] = 'partners'
     and (storage.foldername(name))[2] = (select auth.uid())::text
     and not (select public.is_partner_password_setup_pending())
-    and exists (select 1 from public.store_owners o where o.user_id = (select auth.uid()))
+    and exists (select 1 from public.partner_accounts o where o.user_id = (select auth.uid()))
   );
 
 -- Setelah membuat pengguna lewat Authentication > Users, berikan akses admin:
