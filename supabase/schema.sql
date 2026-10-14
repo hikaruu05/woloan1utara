@@ -177,11 +177,14 @@ create table if not exists public.partner_accounts (
   user_id uuid primary key references auth.users(id) on delete cascade,
   listing_kind text not null check (listing_kind in ('houses','stores','destinations')),
   listing_id uuid not null,
+  login_username text,
   must_change_password boolean not null default true,
   created_at timestamptz not null default now(),
   unique (listing_kind, listing_id)
 );
 alter table public.partner_accounts alter column listing_id drop not null;
+alter table public.partner_accounts add column if not exists login_username text;
+create unique index if not exists partner_accounts_login_username_unique on public.partner_accounts (lower(login_username)) where login_username is not null;
 insert into public.partner_accounts(user_id, listing_kind, listing_id, must_change_password)
 select user_id, 'stores', store_id, must_change_password from public.store_owners
 on conflict (user_id) do nothing;
@@ -218,17 +221,17 @@ create unique index if not exists one_pending_partner_submission_per_listing on 
 -- listings must be unlinked before deletion or archiving.
 create or replace function public.guard_partner_listing_lifecycle()
 returns trigger language plpgsql security definer set search_path = '' as $$
-declare listing_kind text := TG_TABLE_NAME;
+declare v_listing_kind text := TG_TABLE_NAME;
 begin
   if TG_OP = 'DELETE' then
-    if exists (select 1 from public.partner_accounts a where a.listing_kind = listing_kind and a.listing_id = OLD.id) then
+    if exists (select 1 from public.partner_accounts a where a.listing_kind = v_listing_kind and a.listing_id = OLD.id) then
       raise exception 'Listing ini masih terhubung ke akun mitra. Cabut tautan akun sebelum menghapus listing.' using errcode = '23503';
     end if;
-    delete from public.partner_submissions s where s.listing_kind = listing_kind and s.listing_id = OLD.id;
+    delete from public.partner_submissions s where s.listing_kind = v_listing_kind and s.listing_id = OLD.id;
     return OLD;
   end if;
   if NEW.status = 'archived' and OLD.status <> 'archived'
-     and exists (select 1 from public.partner_accounts a where a.listing_kind = listing_kind and a.listing_id = NEW.id) then
+     and exists (select 1 from public.partner_accounts a where a.listing_kind = v_listing_kind and a.listing_id = NEW.id) then
     raise exception 'Listing ini masih dikelola akun mitra. Cabut tautan akun sebelum mengarsipkan listing.' using errcode = '23514';
   end if;
   return NEW;

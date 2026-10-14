@@ -8,24 +8,28 @@ import {
   UMKMProductItem,
   UMKMStore,
 } from "../types";
-import { StoreSubmission } from "../services/supabase";
+import { PartnerAccountLink, StoreSubmission } from "../services/supabase";
 import {
   deleteListing as deleteRemoteListing,
   fetchListings,
   isAdministrator,
   getPartnerAccount,
-  fetchPartnerStore,
+  fetchPartnerListing,
+  fetchPartnerAccounts,
   fetchStoreSubmissions,
   submitStoreChanges,
+  createPartnerListingSubmission,
   reviewStoreSubmission,
   uploadPartnerListingImage,
   createPartnerAccount as createRemotePartnerAccount,
+  unlinkPartnerAccount as unlinkRemotePartnerAccount,
   changePartnerPassword as changeRemotePartnerPassword,
   isSupabaseConfigured,
   readSavedSession,
   refreshSession,
   saveSession,
   signIn,
+  signInPartner,
   signOut,
   SupabaseSession,
   upsertListing,
@@ -51,15 +55,18 @@ interface DataContextType {
   isAdmin: boolean;
   isPartner: boolean;
   partnerMustChangePassword: boolean;
-  partnerStore: UMKMStore | null;
+  partnerListing: AdminListing | null;
+  partnerListingKind: ListingKind | null;
   partnerSubmissions: StoreSubmission[];
+  partnerAccounts: PartnerAccountLink[];
   loginAdmin: (email: string, password: string) => Promise<void>;
-  loginPartner: (email: string, password: string) => Promise<void>;
+  loginPartner: (username: string, password: string) => Promise<void>;
   logoutAdmin: () => Promise<void>;
-  submitPartnerStore: (payload: UMKMStore) => Promise<void>;
+  submitPartnerListing: (payload: Record<string, unknown>) => Promise<void>;
   refreshPartnerData: () => Promise<void>;
   reviewSubmission: (id: string, decision: "approve" | "reject", note?: string) => Promise<void>;
-  createPartnerAccount: (email: string, storeId: string, temporaryPassword: string) => Promise<"created" | "reset">;
+  createPartnerAccount: (username: string, kind: ListingKind, temporaryPassword: string) => Promise<"created" | "reset">;
+  unlinkPartnerAccount: (kind: ListingKind, listingId: string) => Promise<void>;
   changePartnerPassword: (newPassword: string) => Promise<void>;
   uploadPartnerImage: (file: File) => Promise<string>;
   saveListing: (
@@ -103,9 +110,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPartner, setIsPartner] = useState(false);
   const [partnerMustChangePassword, setPartnerMustChangePassword] = useState(false);
-  const [partnerStoreId, setPartnerStoreId] = useState<string | null>(null);
-  const [partnerStore, setPartnerStore] = useState<UMKMStore | null>(null);
+  const [partnerListingId, setPartnerListingId] = useState<string | null>(null);
+  const [partnerListingKind, setPartnerListingKind] = useState<ListingKind | null>(null);
+  const [partnerListing, setPartnerListing] = useState<AdminListing | null>(null);
   const [partnerSubmissions, setPartnerSubmissions] = useState<StoreSubmission[]>([]);
+  const [partnerAccounts, setPartnerAccounts] = useState<PartnerAccountLink[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [adminLoading, setAdminLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -167,7 +176,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         fetchListings("destinations", activeSession.access_token),
       ]);
       setAdminListings([...houseRows, ...storeRows, ...destinationRows]);
-      setPartnerSubmissions(await fetchStoreSubmissions(activeSession));
+      const [submissions, accounts] = await Promise.all([fetchStoreSubmissions(activeSession), fetchPartnerAccounts(activeSession)]);
+      setPartnerSubmissions(submissions);
+      setPartnerAccounts(accounts);
     } finally {
       setAdminLoading(false);
     }
@@ -196,7 +207,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
           : await refreshSession(saved);
         const admin = await isAdministrator(renewed);
         const partnerAccount = admin ? null : await getPartnerAccount(renewed);
-        const ownedStoreId = partnerAccount?.storeId || null;
+        const ownedListingId = partnerAccount?.listingId || null;
         if (!admin && !partnerAccount) { await signOut(renewed.access_token); saveSession(null); return; }
         if (cancelled) return;
         setSession(renewed);
@@ -204,12 +215,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsAdmin(admin);
         setIsPartner(!admin);
         setPartnerMustChangePassword(partnerAccount?.mustChangePassword || false);
-        setPartnerStoreId(ownedStoreId);
+        setPartnerListingId(ownedListingId);
+        setPartnerListingKind(partnerAccount?.listingKind || null);
         if (admin) await refreshAdminCatalog(renewed);
-        else if (ownedStoreId) {
-          const [store, submissions] = await Promise.all([fetchPartnerStore(renewed, ownedStoreId), fetchStoreSubmissions(renewed, ownedStoreId)]);
-          setPartnerStore(store); setPartnerSubmissions(submissions);
-        }
+        else if (ownedListingId && partnerAccount) {
+          const [store, submissions] = await Promise.all([fetchPartnerListing(renewed, partnerAccount.listingKind, ownedListingId), fetchStoreSubmissions(renewed, ownedListingId)]);
+          setPartnerListing(store); setPartnerSubmissions(submissions);
+        } else if (partnerAccount) { setPartnerListing(null); setPartnerSubmissions([]); }
       } catch {
         saveSession(null);
       }
@@ -236,13 +248,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsAdmin(true);
     setIsPartner(false);
     setPartnerMustChangePassword(false);
-    setPartnerStoreId(null);
+    setPartnerListingId(null); setPartnerListingKind(null); setPartnerListing(null);
     await refreshAdminCatalog(nextSession);
   };
 
-  const loginPartner = async (email: string, password: string) => {
+  const loginPartner = async (username: string, password: string) => {
     if (!isSupabaseConfigured) throw new Error("Login belum siap. Koneksi layanan belum diatur.");
-    const nextSession = await signIn(email.trim(), password);
+    const nextSession = await signInPartner(username, password);
     if (await isAdministrator(nextSession)) {
       await signOut(nextSession.access_token);
       throw new Error("Akun ini digunakan untuk portal petugas. Silakan masuk melalui halaman admin.");
@@ -253,27 +265,38 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       throw new Error("Akun ini belum terhubung ke data usaha. Hubungi petugas kelurahan.");
     }
     try {
-      const [store, submissions] = await Promise.all([fetchPartnerStore(nextSession, partnerAccount.storeId), fetchStoreSubmissions(nextSession, partnerAccount.storeId)]);
+      const [store, submissions] = partnerAccount.listingId
+        ? await Promise.all([fetchPartnerListing(nextSession, partnerAccount.listingKind, partnerAccount.listingId), fetchStoreSubmissions(nextSession, partnerAccount.listingId)])
+        : [null, [] as StoreSubmission[]];
       setSession(nextSession); saveSession(nextSession); setIsPartner(true); setIsAdmin(false);
-      setPartnerStoreId(partnerAccount.storeId); setPartnerStore(store); setPartnerSubmissions(submissions);
+      setPartnerListingId(partnerAccount.listingId); setPartnerListingKind(partnerAccount.listingKind); setPartnerListing(store); setPartnerSubmissions(submissions);
       setPartnerMustChangePassword(partnerAccount.mustChangePassword);
     } catch (error) { await signOut(nextSession.access_token); throw error; }
   };
 
   const refreshPartnerData = async () => {
-    if (!session || !partnerStoreId) return;
+    if (!session || !partnerListingId || !partnerListingKind) return;
     const activeSession = await currentSession();
-    const [store, submissions] = await Promise.all([fetchPartnerStore(activeSession, partnerStoreId), fetchStoreSubmissions(activeSession, partnerStoreId)]);
-    setPartnerStore(store); setPartnerSubmissions(submissions);
+    const [store, submissions] = await Promise.all([fetchPartnerListing(activeSession, partnerListingKind, partnerListingId), fetchStoreSubmissions(activeSession, partnerListingId)]);
+    setPartnerListing(store); setPartnerSubmissions(submissions);
   };
 
-  const submitPartnerStore = async (payload: UMKMStore) => {
-    if (!isPartner || !partnerStoreId) throw new Error("Masuk dengan akun usaha untuk mengirim perubahan.");
+  const submitPartnerListing = async (payload: Record<string, unknown>) => {
+    if (!isPartner || !partnerListingKind) throw new Error("Masuk dengan akun mitra untuk mengirim listing.");
     if (partnerMustChangePassword) throw new Error("Ganti kata sandi sementara sebelum mengirim perubahan.");
-    if (partnerSubmissions.some((submission) => submission.status === "pending")) throw new Error("Perubahan Anda sedang diperiksa. Tunggu tanggapan petugas sebelum mengirim perubahan lain.");
-    await submitStoreChanges(await currentSession(), partnerStoreId, payload);
-    await refreshPartnerData();
-    showToast("Perubahan dikirim", "Petugas kelurahan akan memeriksa data sebelum diterbitkan.", "info");
+    if (partnerSubmissions.some((submission) => submission.status === "pending")) throw new Error("Pengajuan Anda sedang diperiksa. Tunggu tanggapan petugas sebelum mengirim perubahan lain.");
+    const activeSession = await currentSession();
+    if (partnerListingId) {
+      await submitStoreChanges(activeSession, partnerListingKind, partnerListingId, { ...payload, id: partnerListingId });
+      await refreshPartnerData();
+      showToast("Perubahan dikirim", "Petugas kelurahan akan memeriksa data sebelum diterbitkan.", "info");
+    } else {
+      const createdId = await createPartnerListingSubmission(activeSession, payload);
+      setPartnerListingId(createdId);
+      const [listing, submissions] = await Promise.all([fetchPartnerListing(activeSession, partnerListingKind, createdId), fetchStoreSubmissions(activeSession, createdId)]);
+      setPartnerListing(listing); setPartnerSubmissions(submissions);
+      showToast("Listing dikirim", "Petugas kelurahan akan memeriksa listing sebelum diterbitkan.", "info");
+    }
   };
 
   const reviewSubmission = async (id: string, decision: "approve" | "reject", note = "") => {
@@ -285,12 +308,21 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     showToast(decision === "approve" ? "Perubahan diterbitkan" : "Pengajuan ditolak", decision === "approve" ? "Listing usaha telah diperbarui." : "Status pengajuan telah diperbarui.", decision === "approve" ? "success" : "info");
   };
 
-  const createPartnerAccount = async (email: string, storeId: string, temporaryPassword: string) => {
+  const createPartnerAccount = async (username: string, kind: ListingKind, temporaryPassword: string) => {
     if (!isAdmin) throw new Error("Hanya petugas yang dapat membuat akun mitra.");
     const activeSession = await currentSession();
-    const action = await createRemotePartnerAccount(activeSession, email, storeId, temporaryPassword);
+    const action = await createRemotePartnerAccount(activeSession, username, kind, temporaryPassword);
+    setPartnerAccounts(await fetchPartnerAccounts(activeSession));
     showToast(action === "reset" ? "Kredensial diatur ulang" : "Akun mitra dibuat", "Berikan username dan kata sandi sementara kepada pemilik usaha secara pribadi.");
     return action;
+  };
+
+  const unlinkPartnerAccount = async (kind: ListingKind, listingId: string) => {
+    if (!isAdmin) throw new Error("Hanya petugas yang dapat mencabut akses mitra.");
+    const activeSession = await currentSession();
+    await unlinkRemotePartnerAccount(activeSession, kind, listingId);
+    setPartnerAccounts(await fetchPartnerAccounts(activeSession));
+    showToast("Tautan listing dicabut", "Akun mitra tetap aktif dan dapat membuat listing baru dengan jenis katalog yang sama.", "info");
   };
 
   const changePartnerPassword = async (newPassword: string) => {
@@ -311,7 +343,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     saveSession(null);
     setSession(null);
     setIsAdmin(false);
-    setIsPartner(false); setPartnerMustChangePassword(false); setPartnerStoreId(null); setPartnerStore(null); setPartnerSubmissions([]);
+    setIsPartner(false); setPartnerMustChangePassword(false); setPartnerListingId(null); setPartnerListingKind(null); setPartnerListing(null); setPartnerSubmissions([]);
     setAdminListings([]);
     await refreshPublicCatalog();
   };
@@ -331,9 +363,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
       createdAt: payload.createdAt || dateToday(),
     };
     const saved = await upsertListing(kind, id, normalizedPayload, status, activeSession);
-    await refreshAdminCatalog(activeSession);
-    await refreshPublicCatalog();
-    showToast("Perubahan tersimpan", "Data katalog berhasil diperbarui.");
+    setAdminListings((previous) => [saved, ...previous.filter((item) => !(item.kind === saved.kind && item.id === saved.id))]);
+    const refreshResults = await Promise.allSettled([refreshAdminCatalog(activeSession), refreshPublicCatalog()]);
+    if (refreshResults.some((result) => result.status === "rejected")) {
+      showToast("Listing tersimpan", "Data berhasil disimpan, tetapi daftar belum diperbarui. Muat ulang dashboard untuk menyegarkan tampilan.", "info");
+    }
+    else showToast("Perubahan tersimpan", "Data katalog berhasil diperbarui.");
     return saved.id;
   };
 
@@ -341,9 +376,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!isAdmin) throw new Error("Masuk sebagai administrator untuk mengubah katalog.");
     const activeSession = await currentSession();
     await deleteRemoteListing(kind, id, activeSession);
-    await refreshAdminCatalog(activeSession);
-    await refreshPublicCatalog();
-    showToast("Listing dihapus", "Data berhasil dihapus dari katalog.", "info");
+    setAdminListings((previous) => previous.filter((item) => !(item.kind === kind && item.id === id)));
+    const refreshResults = await Promise.allSettled([refreshAdminCatalog(activeSession), refreshPublicCatalog()]);
+    showToast("Listing dihapus", refreshResults.some((result) => result.status === "rejected") ? "Data sudah dihapus. Muat ulang dashboard untuk menyegarkan daftar." : "Data berhasil dihapus dari katalog.", "info");
   };
 
   const uploadImage = async (file: File) => {
@@ -405,15 +440,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         isAdmin,
         isPartner,
         partnerMustChangePassword,
-        partnerStore,
+        partnerListing,
+        partnerListingKind,
         partnerSubmissions,
+        partnerAccounts,
         loginAdmin,
         loginPartner,
         logoutAdmin,
-        submitPartnerStore,
+        submitPartnerListing,
         refreshPartnerData,
         reviewSubmission,
         createPartnerAccount,
+        unlinkPartnerAccount,
         changePartnerPassword,
         uploadPartnerImage,
         saveListing,

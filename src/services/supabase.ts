@@ -20,13 +20,21 @@ export interface SupabaseSession {
 
 export interface StoreSubmission {
   id: string;
-  store_id: string;
+  listing_kind: ListingKind;
+  listing_id: string;
   user_id: string;
   payload: Record<string, unknown>;
   status: "pending" | "approved" | "rejected";
   review_note: string | null;
   created_at: string;
   reviewed_at: string | null;
+}
+
+export interface PartnerAccountLink {
+  user_id: string;
+  listing_kind: ListingKind;
+  listing_id: string | null;
+  login_username: string | null;
 }
 
 interface ListingRow {
@@ -138,6 +146,16 @@ export async function signIn(email: string, password: string): Promise<SupabaseS
   return { ...result, expires_at: Date.now() + result.expires_in * 1000 };
 }
 
+const partnerLoginDomain = "mitra.woloan1utara.invalid";
+function partnerAuthEmail(identifier: string): string {
+  const normalized = identifier.trim().toLowerCase();
+  return normalized.includes("@") ? normalized : `${normalized}@${partnerLoginDomain}`;
+}
+
+export async function signInPartner(username: string, password: string): Promise<SupabaseSession> {
+  return signIn(partnerAuthEmail(username), password);
+}
+
 export async function refreshSession(session: SupabaseSession): Promise<SupabaseSession> {
   const { url, anonKey } = requireConfig();
   const result = await requestJson<Omit<SupabaseSession, "expires_at"> & { expires_in: number }>(
@@ -168,45 +186,62 @@ export async function isAdministrator(session: SupabaseSession): Promise<boolean
   return rows.some((row) => row.user_id === session.user.id);
 }
 
-export async function getPartnerAccount(session: SupabaseSession): Promise<{ storeId: string; mustChangePassword: boolean } | null> {
+export async function getPartnerAccount(session: SupabaseSession): Promise<{ listingId: string | null; listingKind: ListingKind; mustChangePassword: boolean } | null> {
   const { url } = requireConfig();
-  const rows = await requestJson<Array<{ store_id: string; must_change_password: boolean }>>(
-    `${url}/rest/v1/store_owners?select=store_id,must_change_password&user_id=eq.${encodeURIComponent(session.user.id)}`,
+  const rows = await requestJson<Array<{ listing_id: string | null; listing_kind: ListingKind; must_change_password: boolean }>>(
+    `${url}/rest/v1/partner_accounts?select=listing_id,listing_kind,must_change_password&user_id=eq.${encodeURIComponent(session.user.id)}`,
     { headers: apiHeaders(session.access_token) },
   );
-  return rows[0] ? { storeId: rows[0].store_id, mustChangePassword: rows[0].must_change_password } : null;
+  return rows[0] ? { listingId: rows[0].listing_id, listingKind: rows[0].listing_kind, mustChangePassword: rows[0].must_change_password } : null;
 }
 
-export async function fetchPartnerStore(session: SupabaseSession, storeId: string): Promise<UMKMStore> {
+export async function fetchPartnerListing(session: SupabaseSession, kind: ListingKind, listingId: string): Promise<AdminListing> {
   const rows = await requestJson<ListingRow[]>(
-    tableUrl("stores", `select=id,payload,status,created_at,updated_at&id=eq.${encodeURIComponent(storeId)}&limit=1`),
+    tableUrl(kind, `select=id,payload,status,created_at,updated_at&id=eq.${encodeURIComponent(listingId)}&limit=1`),
     { headers: apiHeaders(session.access_token) },
   );
-  if (!rows[0]) throw new Error("Data usaha belum dapat ditemukan. Hubungi petugas kelurahan.");
-  return hydrateRow(rows[0], "stores").payload as UMKMStore;
+  if (!rows[0]) throw new Error("Data listing belum dapat ditemukan. Hubungi petugas kelurahan.");
+  return hydrateRow(rows[0], kind);
 }
 
-export async function fetchStoreSubmissions(session: SupabaseSession, storeId?: string): Promise<StoreSubmission[]> {
+export async function fetchStoreSubmissions(session: SupabaseSession, listingId?: string): Promise<StoreSubmission[]> {
   const { url } = requireConfig();
-  const filter = storeId ? `&store_id=eq.${encodeURIComponent(storeId)}` : "";
+  const filter = listingId ? `&listing_id=eq.${encodeURIComponent(listingId)}` : "";
   return requestJson<StoreSubmission[]>(
-    `${url}/rest/v1/store_submissions?select=id,store_id,user_id,payload,status,review_note,created_at,reviewed_at${filter}&order=created_at.desc`,
+    `${url}/rest/v1/partner_submissions?select=id,listing_kind,listing_id,user_id,payload,status,review_note,created_at,reviewed_at${filter}&order=created_at.desc`,
     { headers: apiHeaders(session.access_token) },
   );
 }
 
-export async function submitStoreChanges(session: SupabaseSession, storeId: string, payload: UMKMStore): Promise<void> {
+export async function fetchPartnerAccounts(session: SupabaseSession): Promise<PartnerAccountLink[]> {
   const { url } = requireConfig();
-  await requestJson<unknown>(`${url}/rest/v1/store_submissions`, {
+  return requestJson<PartnerAccountLink[]>(
+    `${url}/rest/v1/partner_accounts?select=user_id,listing_kind,listing_id,login_username&order=created_at.desc`,
+    { headers: apiHeaders(session.access_token) },
+  );
+}
+
+export async function submitStoreChanges(session: SupabaseSession, kind: ListingKind, listingId: string, payload: Record<string, unknown>): Promise<void> {
+  const { url } = requireConfig();
+  await requestJson<unknown>(`${url}/rest/v1/partner_submissions`, {
     method: "POST",
     headers: { ...apiHeaders(session.access_token), Prefer: "return=minimal" },
-    body: JSON.stringify({ store_id: storeId, user_id: session.user.id, payload, status: "pending" }),
+    body: JSON.stringify({ listing_kind: kind, listing_id: listingId, user_id: session.user.id, payload, status: "pending" }),
+  });
+}
+
+export async function createPartnerListingSubmission(session: SupabaseSession, payload: Record<string, unknown>): Promise<string> {
+  const { url } = requireConfig();
+  return requestJson<string>(`${url}/rest/v1/rpc/create_partner_listing_submission`, {
+    method: "POST",
+    headers: apiHeaders(session.access_token),
+    body: JSON.stringify({ p_payload: payload }),
   });
 }
 
 export async function reviewStoreSubmission(session: SupabaseSession, submissionId: string, decision: "approve" | "reject", note = ""): Promise<void> {
   const { url } = requireConfig();
-  const rpc = decision === "approve" ? "approve_store_submission" : "reject_store_submission";
+  const rpc = decision === "approve" ? "approve_partner_submission" : "reject_partner_submission";
   await requestJson<unknown>(`${url}/rest/v1/rpc/${rpc}`, {
     method: "POST",
     headers: apiHeaders(session.access_token),
@@ -214,7 +249,7 @@ export async function reviewStoreSubmission(session: SupabaseSession, submission
   });
 }
 
-export async function createPartnerAccount(session: SupabaseSession, email: string, storeId: string, temporaryPassword: string): Promise<"created" | "reset"> {
+export async function createPartnerAccount(session: SupabaseSession, username: string, listingKind: ListingKind, temporaryPassword: string): Promise<"created" | "reset"> {
   const { url, anonKey } = requireConfig();
   let response: Response;
   try {
@@ -225,16 +260,35 @@ export async function createPartnerAccount(session: SupabaseSession, email: stri
         Authorization: `Bearer ${session.access_token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email: email.trim().toLowerCase(), storeId, temporaryPassword }),
+      body: JSON.stringify({ contractVersion: 4, username: username.trim().toLowerCase(), listingKind, temporaryPassword }),
     });
   } catch {
     throw new Error("Layanan pembuatan akun tidak dapat dihubungi. Pastikan fungsi Supabase create-partner-account sudah diterapkan pada proyek yang sama dengan situs ini.");
   }
   const body = await response.json().catch(() => null);
   if (!response.ok) {
+    if (body?.error === "Versi formulir akun tidak sesuai. Muat ulang situs lalu coba lagi.") {
+      throw new Error("Fungsi pembuatan akun Supabase masih versi lama. Pengelola situs perlu menerapkan ulang create-partner-account.");
+    }
     throw new Error(body?.error || "Akun belum dapat dibuat. Periksa koneksi lalu coba lagi.");
   }
+  if (body?.contractVersion !== 4) {
+    throw new Error("Fungsi pembuatan akun Supabase belum menggunakan versi yang sesuai. Terapkan ulang create-partner-account lalu coba lagi.");
+  }
   return body?.reset ? "reset" : "created";
+}
+
+export async function unlinkPartnerAccount(session: SupabaseSession, listingKind: ListingKind, listingId: string): Promise<void> {
+  const { url, anonKey } = requireConfig();
+  const response = await fetch(`${url}/functions/v1/create-partner-account`, {
+    method: "POST",
+    headers: { apikey: anonKey, Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "unlink", contractVersion: 4, listingKind, listingId }),
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok && body?.error === "Listing ini belum terhubung ke akun mitra.") return;
+  if (!response.ok) throw new Error(body?.error || "Tautan akun mitra belum dapat dicabut.");
+  if (body?.contractVersion !== 4) throw new Error("Fungsi Supabase masih versi lama. Terapkan ulang create-partner-account.");
 }
 
 export async function changePartnerPassword(session: SupabaseSession, newPassword: string): Promise<void> {

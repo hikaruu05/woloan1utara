@@ -31,6 +31,8 @@ export interface UMKMProductItem {
   name: string;
   price: string;
   priceNum: number;
+  phone?: string; // WhatsApp khusus produk; jika kosong gunakan WhatsApp usaha.
+  mapsUrl?: string; // Titik ambil/jual produk; jika kosong gunakan titik usaha.
   unit?: string; // e.g. 'per pcs', 'per kemasan', 'per porsi'
   description?: string;
   imageUrl: string;

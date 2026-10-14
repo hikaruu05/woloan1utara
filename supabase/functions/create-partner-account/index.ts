@@ -60,7 +60,7 @@ Deno.serve(async (request) => {
   }
   if (!adminRecord) return reply(403, { error: "Hanya admin kelurahan yang dapat membuat akun mitra." });
 
-  let body: { action?: unknown; contractVersion?: unknown; email?: unknown; listingKind?: unknown; listingId?: unknown; temporaryPassword?: unknown };
+  let body: { action?: unknown; contractVersion?: unknown; username?: unknown; listingKind?: unknown; listingId?: unknown; temporaryPassword?: unknown };
   try {
     const rawBody = await request.text();
     if (new TextEncoder().encode(rawBody).byteLength > 4096) {
@@ -70,8 +70,11 @@ Deno.serve(async (request) => {
   } catch {
     return reply(400, { error: "Isi permintaan tidak valid." });
   }
-  if (body.contractVersion !== 3) return reply(409, { error: "Versi formulir akun tidak sesuai. Muat ulang situs lalu coba lagi." });
-  const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  if (body.contractVersion !== 4) return reply(409, { error: "Versi formulir akun tidak sesuai. Muat ulang situs lalu coba lagi." });
+  const usernameInput = typeof body.username === "string" ? body.username.trim().toLowerCase() : "";
+  const legacyEmail = usernameInput.includes("@") ? usernameInput : "";
+  const username = legacyEmail ? "" : usernameInput;
+  const email = legacyEmail || (username ? `${username}@mitra.woloan1utara.invalid` : "");
   const listingKind = typeof body.listingKind === "string" ? body.listingKind.trim() : "";
   const listingId = typeof body.listingId === "string" ? body.listingId.trim() : "";
   const temporaryPassword = typeof body.temporaryPassword === "string" ? body.temporaryPassword : "";
@@ -90,10 +93,13 @@ Deno.serve(async (request) => {
       return reply(500, { error: "Tautan akun belum dapat dicabut. Coba lagi." });
     }
     if (!removedAccount) return reply(404, { error: "Listing ini belum terhubung ke akun mitra." });
-    return reply(200, { ok: true, unlinked: true, contractVersion: 3 });
+    return reply(200, { ok: true, unlinked: true, contractVersion: 4 });
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return reply(400, { error: "Masukkan alamat email login pengusaha yang valid." });
+  if (!legacyEmail && !/^[a-z0-9][a-z0-9._-]{2,31}$/.test(username)) {
+    return reply(400, { error: "Username harus 3–32 karakter: huruf, angka, titik, garis bawah, atau tanda hubung." });
+  }
+  if (legacyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(legacyEmail)) {
+    return reply(400, { error: "Format username atau email lama tidak valid." });
   }
   if (temporaryPassword.length < 16 || temporaryPassword.length > 128) {
     return reply(400, { error: "Kata sandi sementara tidak memenuhi syarat keamanan." });
@@ -102,7 +108,7 @@ Deno.serve(async (request) => {
   const { data: existingUserId, error: authLookupError } = await adminClient.rpc("lookup_auth_user_id_by_email", { target_email: email });
   if (authLookupError) {
     console.error("Could not check for an existing login.", authLookupError.message);
-    return reply(500, { error: "Status email login belum dapat diperiksa. Pastikan skema Supabase terbaru sudah diterapkan." });
+    return reply(500, { error: "Status username belum dapat diperiksa. Pastikan skema Supabase terbaru sudah diterapkan." });
   }
   let partnerUserId: string;
   let createdNewAuthUser = false;
@@ -112,11 +118,11 @@ Deno.serve(async (request) => {
       .select("user_id")
       .eq("user_id", existingUserId)
       .maybeSingle();
-    if (adminLookupError) return reply(500, { error: "Status email login belum dapat diperiksa." });
-    if (isAnotherAdmin) return reply(409, { error: "Email ini digunakan akun admin. Gunakan email login khusus untuk mitra." });
+    if (adminLookupError) return reply(500, { error: "Status username belum dapat diperiksa." });
+    if (isAnotherAdmin) return reply(409, { error: "Username ini sudah digunakan akun admin. Pilih username lain." });
     const { data: existingAccount, error: membershipError } = await adminClient
       .from("partner_accounts")
-      .select("user_id,listing_kind,listing_id")
+      .select("user_id,listing_kind,listing_id,login_username")
       .eq("user_id", existingUserId)
       .maybeSingle();
     if (membershipError) return reply(500, { error: "Status akun mitra belum dapat diperiksa." });
@@ -125,20 +131,20 @@ Deno.serve(async (request) => {
     if (resetError) return reply(400, { error: "Kata sandi login lama belum dapat diatur ulang." });
     partnerUserId = existingUserId;
     if (existingAccount) {
-      const { error: updateError } = await adminClient.from("partner_accounts").update({ listing_kind: listingKind, must_change_password: true }).eq("user_id", existingUserId);
+      const { error: updateError } = await adminClient.from("partner_accounts").update({ listing_kind: listingKind, ...(username ? { login_username: username } : {}), must_change_password: true }).eq("user_id", existingUserId);
       if (updateError) return reply(500, { error: "Akun lama belum dapat diperbarui." });
-      return reply(200, { ok: true, reset: true, contractVersion: 3 });
+      return reply(200, { ok: true, reset: true, contractVersion: 4 });
     }
   } else {
     const { data: created, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password: temporaryPassword,
       email_confirm: true,
-      user_metadata: { account_type: "business_partner" },
+      user_metadata: { account_type: "business_partner", login_username: username || undefined },
     });
     if (createError || !created.user) {
       const message = createError?.message.toLowerCase().includes("already")
-        ? "Email ini sudah memiliki akun. Periksa tautan akun lama atau gunakan email login lain."
+        ? "Username ini sudah memiliki akun. Gunakan username lain atau atur ulang akun yang sudah ada."
         : "Akun belum dapat dibuat. Periksa alamat email dan pengaturan autentikasi.";
       return reply(400, { error: message });
     }
@@ -148,18 +154,18 @@ Deno.serve(async (request) => {
 
   const { error: linkError } = await adminClient
     .from("partner_accounts")
-    .insert({ listing_kind: listingKind, listing_id: null, user_id: partnerUserId, must_change_password: true });
+    .insert({ listing_kind: listingKind, listing_id: null, login_username: username || null, user_id: partnerUserId, must_change_password: true });
   if (linkError) {
     if (createdNewAuthUser) {
       const { error: cleanupError } = await adminClient.auth.admin.deleteUser(partnerUserId);
       if (cleanupError) console.error("Could not clean up unlinked partner account.", cleanupError.message);
     }
     if (linkError.code === "23505") {
-      return reply(409, { error: "Listing atau email ini sudah terhubung ke akun mitra lain." });
+      return reply(409, { error: "Listing atau username ini sudah digunakan akun lain." });
     }
     console.error("Could not create partner account.", linkError.message);
     return reply(500, { error: "Akun belum dapat dibuat. Coba lagi atau hubungi pengelola." });
   }
 
-  return reply(200, { ok: true, contractVersion: 3 });
+  return reply(200, { ok: true, contractVersion: 4 });
 });

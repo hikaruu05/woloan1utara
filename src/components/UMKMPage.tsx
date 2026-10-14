@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useData } from "../context/DataContext";
 import { UMKMStore, UMKMProductItem } from "../types";
 import { Pagination } from "./Pagination";
+import { whatsappUrl } from "../utils/whatsapp";
 import {
   Store,
   Search,
@@ -98,25 +99,13 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
   }, [allProductsWithStore, currentPage]);
 
   const getStoreWaLink = (store: UMKMStore) => {
-    const text = encodeURIComponent(
-      `Halo ${store.name} (${store.ownerName}), saya melihat profil usaha Anda di Portal Web Kelurahan Woloan 1 Utara. Saya ingin bertanya mengenai produk dan pemesanan. Terima kasih.`,
-    );
-    const cleanPhone = store.phone.replace(/[^0-9]/g, "");
-    const phone = cleanPhone.startsWith("0")
-      ? "62" + cleanPhone.slice(1)
-      : cleanPhone;
-    return `https://wa.me/${phone}?text=${text}`;
+    const text = `Halo ${store.name} (${store.ownerName}), saya melihat profil usaha Anda di Portal Web Kelurahan Woloan 1 Utara. Saya ingin bertanya mengenai produk dan pemesanan. Terima kasih.`;
+    return whatsappUrl(store.phone, text) || "#";
   };
 
   const getProductWaLink = (product: UMKMProductItem, store: UMKMStore) => {
-    const text = encodeURIComponent(
-      `Halo ${store.name}, saya tertarik memesan produk "${product.name}" (${product.price}) dari etalase UMKM Web Woloan 1 Utara. Apakah produk ini tersedia? Terima kasih.`,
-    );
-    const cleanPhone = store.phone.replace(/[^0-9]/g, "");
-    const phone = cleanPhone.startsWith("0")
-      ? "62" + cleanPhone.slice(1)
-      : cleanPhone;
-    return `https://wa.me/${phone}?text=${text}`;
+    const text = `Halo ${store.name}, saya tertarik memesan produk "${product.name}" (${product.price}) dari etalase UMKM Web Woloan 1 Utara. Apakah produk ini tersedia? Terima kasih.`;
+    return whatsappUrl(product.phone || store.phone, text) || "#";
   };
 
   return (
@@ -506,13 +495,13 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                             <span className="truncate max-w-[190px]">
                               {store.address}
                             </span>
-                            {store.mapsUrl && (
+                            {(product.mapsUrl || store.mapsUrl) && (
                               <a
-                                href={store.mapsUrl}
+                                href={product.mapsUrl || store.mapsUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-[10px] font-bold text-forest-700 hover:text-forest-900 bg-forest-50 px-2 py-0.5 rounded"
-                                title="Buka di Google Maps"
+                                title={product.mapsUrl ? "Buka titik produk di Google Maps" : "Buka titik usaha di Google Maps"}
                               >
                                 <MapPin className="w-3 h-3 text-red-600" />
                                 <span>Maps</span>
@@ -537,7 +526,7 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                             )}
                           </div>
 
-                          <a
+                          {(product.phone || store.phone) && <a
                             href={getProductWaLink(product, store)}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -545,7 +534,7 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
                           >
                             <MessageCircle className="w-3.5 h-3.5 text-forest-200" />
                             <span>Pesan</span>
-                          </a>
+                          </a>}
                         </div>
                       </div>
                     </div>

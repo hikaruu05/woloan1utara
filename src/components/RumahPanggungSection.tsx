@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useData } from '../context/DataContext';
 import { RumahPanggung } from '../types';
 import { 
   Hammer, Layers, MapPin, CheckCircle2, 
-  MessageCircle, ArrowRight, ExternalLink
+  MessageCircle, ArrowRight, ExternalLink, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 interface RumahPanggungSectionProps {
@@ -16,9 +16,27 @@ export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
   onNavigateToFullPage
 }) => {
   const { houses } = useData();
+  const housesTrackRef = useRef<HTMLDivElement>(null);
+  const [scrollEdges, setScrollEdges] = useState({ left: false, right: false });
 
   // Show top 6 houses on the home preview section
   const previewHouses = houses.slice(0, 6);
+
+  useEffect(() => {
+    const track = housesTrackRef.current;
+    if (!track) return;
+    const updateEdges = () => setScrollEdges({ left: track.scrollLeft > 4, right: track.scrollWidth - track.clientWidth - track.scrollLeft > 4 });
+    updateEdges();
+    track.addEventListener('scroll', updateEdges, { passive: true });
+    const resizeObserver = new ResizeObserver(updateEdges);
+    resizeObserver.observe(track);
+    return () => { track.removeEventListener('scroll', updateEdges); resizeObserver.disconnect(); };
+  }, [previewHouses.length]);
+
+  const scrollHouses = (direction: -1 | 1) => {
+    const track = housesTrackRef.current;
+    if (track) track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' });
+  };
 
   const typeLabels: { [key: string]: string } = {
     tradisional: 'Tradisional Walewangko',
@@ -55,7 +73,11 @@ export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 self-start md:self-auto">
+          <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+            {previewHouses.length > 0 && <div className="flex items-center gap-1" aria-label="Kontrol geser katalog rumah">
+              <button type="button" onClick={() => scrollHouses(-1)} disabled={!scrollEdges.left} aria-label="Geser ke rumah sebelumnya" className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-warm-300 bg-white text-wood-900 transition hover:bg-warm-50 disabled:cursor-not-allowed disabled:opacity-40"><ChevronLeft size={19}/></button>
+              <button type="button" onClick={() => scrollHouses(1)} disabled={!scrollEdges.right} aria-label="Geser ke rumah berikutnya" className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-warm-300 bg-white text-wood-900 transition hover:bg-warm-50 disabled:cursor-not-allowed disabled:opacity-40"><ChevronRight size={19}/></button>
+            </div>}
             <button
               onClick={onNavigateToFullPage}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-wood-800 hover:bg-wood-900 shadow-warm-sm hover:shadow-warm-md transition-all"
@@ -68,11 +90,14 @@ export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
 
         {/* Listing rumah hanya muncul jika datanya sudah diisi petugas. */}
         {previewHouses.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="relative">
+          {scrollEdges.left && <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-7 bg-gradient-to-r from-warm-100 to-transparent"/>}
+          {scrollEdges.right && <div aria-hidden="true" className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-10 bg-gradient-to-l from-warm-100 to-transparent"/>}
+          <div ref={housesTrackRef} role="region" aria-label="Katalog rumah panggung" tabIndex={0} className="flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain px-1 pb-5 pr-10 scroll-smooth focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wood-700 no-scrollbar">
             {previewHouses.map((house) => (
             <div
               key={house.id}
-              className="bg-white rounded-2xl overflow-hidden border border-wood-200/90 shadow-warm-sm hover:shadow-warm-md transition-all duration-300 flex flex-col group"
+              className="w-[min(86vw,360px)] shrink-0 snap-start bg-white rounded-2xl overflow-hidden border border-wood-200/90 shadow-warm-sm hover:shadow-warm-md transition-all duration-300 flex flex-col group"
             >
               {/* Image Container with Badges */}
               <div
@@ -201,6 +226,8 @@ export const RumahPanggungSection: React.FC<RumahPanggungSectionProps> = ({
               </div>
             </div>
             ))}
+          </div>
+          <p className="sr-only" aria-live="polite">{scrollEdges.right ? 'Geser mendatar atau gunakan tombol panah untuk melihat rumah lainnya.' : 'Akhir daftar rumah panggung.'}</p>
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-wood-300 bg-white/70 px-6 py-10 text-center">

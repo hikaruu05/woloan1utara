@@ -6,6 +6,7 @@ import {
   ExternalLink, Package 
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { whatsappUrl } from '../utils/whatsapp';
 
 interface DetailModalProps {
   item: RumahPanggung | UMKMStore | UMKMProductItem | null;
@@ -48,26 +49,14 @@ export const DetailModal: React.FC<DetailModalProps> = ({
 
   const getWaLink = () => {
     if (isHouse && house) {
-      const text = encodeURIComponent(
-        `Halo ${house.craftsmanName},\nSaya ingin berkonsultasi mengenai rumah panggung "${house.title}" yang saya temukan di Web Kelurahan Woloan 1 Utara.\n\nSpesifikasi yang saya tanyakan:\n- Dimensi: ${house.dimensions}\n- Bahan Kayu: ${house.woodTypes.join(', ')}\n- Estimasi Harga: ${house.priceEstimated}\n\nApakah model ini bisa dipesan atau dikustomisasi? Terima kasih.`
-      );
-      const cleanPhone = house.craftsmanPhone.replace(/[^0-9]/g, '');
-      const phone = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
-      return `https://wa.me/${phone}?text=${text}`;
+      const text = `Halo ${house.craftsmanName},\nSaya ingin berkonsultasi mengenai rumah panggung "${house.title}" yang saya temukan di Web Kelurahan Woloan 1 Utara.\n\nSpesifikasi yang saya tanyakan:\n- Dimensi: ${house.dimensions}\n- Bahan Kayu: ${house.woodTypes.join(', ')}\n- Estimasi Harga: ${house.priceEstimated}\n\nApakah model ini bisa dipesan atau dikustomisasi? Terima kasih.`;
+      return whatsappUrl(house.craftsmanPhone, text) || '#';
     } else if (isStore && store) {
-      const text = encodeURIComponent(
-        `Halo ${store.name} (${store.ownerName}),\nSaya ingin menanyakan produk-produk UMKM yang terdaftar di Web Kelurahan Woloan 1 Utara. Bagaimana proses pemesanan dan pengirimannya? Terima kasih.`
-      );
-      const cleanPhone = store.phone.replace(/[^0-9]/g, '');
-      const phone = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
-      return `https://wa.me/${phone}?text=${text}`;
+      const text = `Halo ${store.name} (${store.ownerName}),\nSaya ingin menanyakan produk-produk UMKM yang terdaftar di Web Kelurahan Woloan 1 Utara. Bagaimana proses pemesanan dan pengirimannya? Terima kasih.`;
+      return whatsappUrl(store.phone, text) || '#';
     } else if (isProduct && product && store) {
-      const text = encodeURIComponent(
-        `Halo ${store.name},\nSaya tertarik memesan produk "${product.name}" (${product.price}) dari etalase UMKM Web Woloan 1 Utara. Mohon informasi ketersediaannya. Terima kasih.`
-      );
-      const cleanPhone = store.phone.replace(/[^0-9]/g, '');
-      const phone = cleanPhone.startsWith('0') ? '62' + cleanPhone.slice(1) : cleanPhone;
-      return `https://wa.me/${phone}?text=${text}`;
+      const text = `Halo ${store.name},\nSaya tertarik memesan produk "${product.name}" (${product.price}) dari etalase UMKM Web Woloan 1 Utara. Mohon informasi ketersediaannya. Terima kasih.`;
+      return whatsappUrl(product.phone || store.phone, text) || '#';
     }
     return '#';
   };
@@ -324,17 +313,17 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                           {prod.unit && <span className="text-[10px] text-warm-500 block">{prod.unit}</span>}
                         </div>
 
-                        <a
-                          href={`https://wa.me/${store.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                        {(prod.phone || store.phone) && <a
+                          href={whatsappUrl(prod.phone || store.phone,
                             `Halo ${store.name}, saya ingin memesan "${prod.name}" (${prod.price}) dari katalog Web Woloan 1 Utara.`
-                          )}`}
+                          ) || '#'}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-forest-700 hover:bg-forest-800 flex items-center gap-1 shrink-0"
                         >
                           <MessageCircle className="w-3 h-3" />
                           <span>Pesan</span>
-                        </a>
+                        </a>}
                       </div>
                     </div>
                   ))}
@@ -390,16 +379,16 @@ export const DetailModal: React.FC<DetailModalProps> = ({
                   </div>
                 </div>
 
-                {store.mapsUrl && (
+                {(product.mapsUrl || store.mapsUrl) && (
                   <div className="pt-2 border-t border-warm-200 flex items-center gap-2">
                     <a
-                      href={store.mapsUrl}
+                      href={product.mapsUrl || store.mapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 font-bold text-forest-800 hover:underline"
                     >
                       <MapPin className="w-3.5 h-3.5 text-red-600" />
-                      <span>Buka Titik Lokasi Toko di Google Maps</span>
+                      <span>{product.mapsUrl ? "Buka Titik Lokasi Produk di Google Maps" : "Buka Titik Lokasi Toko di Google Maps"}</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
@@ -427,7 +416,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({
               Tutup
             </button>
 
-            {(isHouse ? Boolean(house?.craftsmanPhone) : Boolean(store?.phone)) && <a
+            {(isHouse ? Boolean(house?.craftsmanPhone) : isProduct ? Boolean(product?.phone || store?.phone) : Boolean(store?.phone)) && <a
               href={getWaLink()}
               target="_blank"
               rel="noopener noreferrer"

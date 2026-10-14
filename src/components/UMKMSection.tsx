@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useData } from "../context/DataContext";
 import { UMKMStore } from "../types";
+import { whatsappUrl } from "../utils/whatsapp";
 import {
   Store,
   MapPin,
@@ -10,6 +11,8 @@ import {
   ExternalLink,
   Package,
   Eye,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface UMKMSectionProps {
@@ -22,19 +25,37 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
   onNavigateToFullPage,
 }) => {
   const { umkmStores } = useData();
+  const storesTrackRef = useRef<HTMLDivElement>(null);
+  const [scrollEdges, setScrollEdges] = useState({ left: false, right: false });
 
   // Preview top 6 stores on home
-  const previewStores = umkmStores.slice(0, 6);
+  const previewStores = umkmStores.filter(store => store.products.length > 0).slice(0, 6);
+
+  useEffect(() => {
+    const track = storesTrackRef.current;
+    if (!track) return;
+    const updateEdges = () => setScrollEdges({
+      left: track.scrollLeft > 4,
+      right: track.scrollWidth - track.clientWidth - track.scrollLeft > 4,
+    });
+    updateEdges();
+    track.addEventListener("scroll", updateEdges, { passive: true });
+    const resizeObserver = new ResizeObserver(updateEdges);
+    resizeObserver.observe(track);
+    return () => {
+      track.removeEventListener("scroll", updateEdges);
+      resizeObserver.disconnect();
+    };
+  }, [previewStores.length]);
+
+  const scrollStores = (direction: -1 | 1) => {
+    const track = storesTrackRef.current;
+    if (track) track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: "smooth" });
+  };
 
   const getStoreWaLink = (store: UMKMStore) => {
-    const text = encodeURIComponent(
-      `Halo ${store.name} (${store.ownerName}), saya melihat profil usaha Anda di Portal Web Kelurahan Woloan 1 Utara. Saya ingin bertanya mengenai produk dan pemesanan. Terima kasih.`,
-    );
-    const cleanPhone = store.phone.replace(/[^0-9]/g, "");
-    const phone = cleanPhone.startsWith("0")
-      ? "62" + cleanPhone.slice(1)
-      : cleanPhone;
-    return `https://wa.me/${phone}?text=${text}`;
+    const text = `Halo ${store.name} (${store.ownerName}), saya melihat profil usaha Anda di Portal Web Kelurahan Woloan 1 Utara. Saya ingin bertanya mengenai produk dan pemesanan. Terima kasih.`;
+    return whatsappUrl(store.phone, text) || "#";
   };
 
   return (
@@ -58,7 +79,11 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 self-start md:self-auto">
+          <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
+            {previewStores.length > 0 && <div className="flex items-center gap-1" aria-label="Kontrol geser katalog usaha">
+              <button type="button" onClick={() => scrollStores(-1)} disabled={!scrollEdges.left} aria-label="Geser ke usaha sebelumnya" className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-warm-300 bg-white text-wood-900 transition hover:bg-warm-50 disabled:cursor-not-allowed disabled:opacity-40"><ChevronLeft size={19}/></button>
+              <button type="button" onClick={() => scrollStores(1)} disabled={!scrollEdges.right} aria-label="Geser ke usaha berikutnya" className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-warm-300 bg-white text-wood-900 transition hover:bg-warm-50 disabled:cursor-not-allowed disabled:opacity-40"><ChevronRight size={19}/></button>
+            </div>}
             <button
               onClick={onNavigateToFullPage}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-forest-800 hover:bg-forest-900 shadow-warm-sm hover:shadow-warm-md transition-all"
@@ -69,13 +94,16 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
           </div>
         </div>
 
-        {/* 6 Featured Stores (Store-based) */}
+        {/* Horizontal, touch-friendly store carousel */}
         {previewStores.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="relative">
+          {scrollEdges.left && <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-7 bg-gradient-to-r from-white to-transparent"/>}
+          {scrollEdges.right && <div aria-hidden="true" className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-10 bg-gradient-to-l from-white to-transparent"/>}
+          <div ref={storesTrackRef} role="region" aria-label="Katalog usaha setempat" tabIndex={0} className="flex snap-x snap-mandatory gap-5 overflow-x-auto overscroll-x-contain px-1 pb-5 pr-10 scroll-smooth focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-wood-700 no-scrollbar">
             {previewStores.map((store) => (
             <div
               key={store.id}
-              className="bg-white rounded-3xl overflow-hidden border border-wood-200 shadow-warm-sm hover:shadow-warm-md transition-all duration-300 flex flex-col group"
+              className="w-[min(86vw,360px)] shrink-0 snap-start bg-white rounded-3xl overflow-hidden border border-wood-200 shadow-warm-sm hover:shadow-warm-md transition-all duration-300 flex flex-col group"
             >
               {/* Store Banner */}
               <div
@@ -207,14 +235,16 @@ export const UMKMSection: React.FC<UMKMSectionProps> = ({
             </div>
             ))}
           </div>
+          <p className="sr-only" aria-live="polite">{scrollEdges.right ? "Geser mendatar atau gunakan tombol panah untuk melihat usaha lainnya." : "Akhir daftar usaha."}</p>
+          </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-forest-300 bg-forest-50/60 px-6 py-10 text-center">
             <Store className="w-9 h-9 mx-auto text-forest-600 mb-3" />
             <h3 className="font-serif text-lg font-bold text-forest-950">
-              Informasi UMKM sedang disiapkan
+              Etalase produk sedang disiapkan
             </h3>
             <p className="mt-2 text-sm text-forest-800">
-              Daftar toko dan produk akan ditampilkan setelah diverifikasi oleh kelurahan.
+              Usaha akan tampil di beranda setelah pemilik menambahkan setidaknya satu produk.
             </p>
           </div>
         )}
