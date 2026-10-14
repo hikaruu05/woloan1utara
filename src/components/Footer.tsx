@@ -1,5 +1,11 @@
-import React from 'react';
-import { Hammer, Heart, MapPin, GraduationCap, LockKeyhole } from 'lucide-react';
+import React from "react";
+import {
+  Hammer,
+  Heart,
+  MapPin,
+  GraduationCap,
+  LockKeyhole,
+} from "lucide-react";
 
 interface FooterProps {
   onNavigate: (sectionId: string) => void;
@@ -27,7 +33,8 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </div>
 
             <p className="text-xs sm:text-sm text-wood-300 leading-relaxed max-w-sm">
-              Portal informasi untuk mengenal rumah panggung, usaha warga, dan destinasi Woloan 1 Utara.
+              Portal informasi untuk mengenal rumah panggung, usaha warga, dan
+              destinasi Woloan 1 Utara.
             </p>
 
             <div className="pt-2 flex items-center gap-2 text-xs text-amber-300/90 font-medium">
@@ -44,7 +51,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <ul className="space-y-2.5 text-xs text-wood-300">
               <li>
                 <button
-                  onClick={() => onNavigate('beranda')}
+                  onClick={() => onNavigate("beranda")}
                   className="hover:text-amber-300 transition-colors"
                 >
                   Beranda Utama
@@ -52,7 +59,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate('profil')}
+                  onClick={() => onNavigate("profil")}
                   className="hover:text-amber-300 transition-colors"
                 >
                   Profil & Visi Misi Kelurahan
@@ -60,7 +67,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate('speciality')}
+                  onClick={() => onNavigate("speciality")}
                   className="hover:text-amber-300 transition-colors"
                 >
                   Keistimewaan & Jenis Kayu
@@ -68,7 +75,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate('kalkulator')}
+                  onClick={() => onNavigate("kalkulator")}
                   className="hover:text-amber-300 transition-colors"
                 >
                   Simulasi Biaya Rumah Panggung
@@ -76,7 +83,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate('kontak')}
+                  onClick={() => onNavigate("kontak")}
                   className="hover:text-amber-300 transition-colors"
                 >
                   Peta Lokasi & Kontak Resmi
@@ -93,7 +100,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <ul className="space-y-2.5 text-xs text-wood-300">
               <li>
                 <button
-                  onClick={() => onNavigate('katalog-rumah')}
+                  onClick={() => onNavigate("katalog-rumah")}
                   className="hover:text-amber-300 transition-colors text-left font-medium"
                 >
                   🏡 Halaman Katalog Rumah Panggung
@@ -101,13 +108,20 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate('katalog-umkm')}
+                  onClick={() => onNavigate("katalog-umkm")}
                   className="hover:text-amber-300 transition-colors text-left font-medium"
                 >
                   🛍️ Halaman Direktori Toko UMKM
                 </button>
               </li>
-              <li><button onClick={() => onNavigate('katalog-destinasi')} className="hover:text-amber-300 transition-colors text-left font-medium">🧭 Destinasi Wisata</button></li>
+              <li>
+                <button
+                  onClick={() => onNavigate("katalog-destinasi")}
+                  className="hover:text-amber-300 transition-colors text-left font-medium"
+                >
+                  🧭 Destinasi Wisata
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -121,20 +135,26 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <MapPin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <span>Jl. Raya Woloan, Kec. Tomohon Barat, Tomohon 95431</span>
               </div>
-              <p className="text-wood-400">Kontak layanan resmi akan ditambahkan setelah dikonfirmasi.</p>
+              <p className="text-wood-400">
+                Kontak layanan resmi akan ditambahkan setelah dikonfirmasi.
+              </p>
             </div>
-
           </div>
-          <div className="lg:col-span-5 -mt-4"><button onClick={() => onNavigate('admin')} className="inline-flex items-center gap-2 text-xs font-semibold text-wood-400 transition-colors hover:text-amber-300"><LockKeyhole className="h-3.5 w-3.5"/> Masuk Admin</button></div>
+          <div className="lg:col-span-5 -mt-4">
+            <button
+              onClick={() => onNavigate("admin")}
+              className="inline-flex items-center gap-2 text-xs font-semibold text-wood-400 transition-colors hover:text-amber-300"
+            >
+              <LockKeyhole className="h-3.5 w-3.5" /> Masuk Admin
+            </button>
+          </div>
         </div>
 
         {/* Bottom Credits */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-wood-400">
-          <p>© {new Date().getFullYear()} Pemerintah Kelurahan Woloan Satu Utara, Tomohon Barat.</p>
-          <p className="flex items-center gap-1">
-            <span>Dikembangkan dengan</span>
-            <Heart className="w-3.5 h-3.5 text-amber-500 fill-amber-500 inline" />
-            <span>untuk Pengabdian Mahasiswa KKT 2026</span>
+          <p>
+            © {new Date().getFullYear()} Pemerintah Kelurahan Woloan Satu
+            Utara, Tomohon Barat.
           </p>
         </div>
       </div>
