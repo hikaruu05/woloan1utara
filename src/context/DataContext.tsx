@@ -288,13 +288,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     const activeSession = await currentSession();
     if (partnerListingId) {
       await submitStoreChanges(activeSession, partnerListingKind, partnerListingId, { ...payload, id: partnerListingId });
-      await refreshPartnerData();
       showToast("Perubahan dikirim", "Petugas kelurahan akan memeriksa data sebelum diterbitkan.", "info");
+      try { await refreshPartnerData(); } catch { showToast("Pengajuan terkirim", "Data sudah dikirim untuk diperiksa. Muat ulang portal untuk menyegarkan status pengajuan.", "info"); }
     } else {
       const createdId = await createPartnerListingSubmission(activeSession, payload);
+      const now = new Date().toISOString();
+      const normalizedPayload = { ...payload, id: createdId, isVerified: false };
       setPartnerListingId(createdId);
-      const [listing, submissions] = await Promise.all([fetchPartnerListing(activeSession, partnerListingKind, createdId), fetchStoreSubmissions(activeSession, createdId)]);
-      setPartnerListing(listing); setPartnerSubmissions(submissions);
+      setPartnerListing({ id: createdId, kind: partnerListingKind, status: "draft", payload: normalizedPayload as AdminListing["payload"], createdAt: now, updatedAt: now });
+      setPartnerSubmissions([{ id: createdId, listing_kind: partnerListingKind, listing_id: createdId, user_id: activeSession.user.id, payload: normalizedPayload, status: "pending", review_note: null, created_at: now, reviewed_at: null }]);
       showToast("Listing dikirim", "Petugas kelurahan akan memeriksa listing sebelum diterbitkan.", "info");
     }
   };

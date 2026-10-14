@@ -232,11 +232,21 @@ export async function submitStoreChanges(session: SupabaseSession, kind: Listing
 
 export async function createPartnerListingSubmission(session: SupabaseSession, payload: Record<string, unknown>): Promise<string> {
   const { url } = requireConfig();
-  return requestJson<string>(`${url}/rest/v1/rpc/create_partner_listing_submission`, {
-    method: "POST",
-    headers: apiHeaders(session.access_token),
-    body: JSON.stringify({ p_payload: payload }),
-  });
+  try {
+    return await requestJson<string>(`${url}/rest/v1/rpc/create_partner_listing_submission`, {
+      method: "POST",
+      headers: apiHeaders(session.access_token),
+      body: JSON.stringify({ p_payload: payload }),
+    });
+  } catch (error) {
+    if (error instanceof TypeError && /fetch/i.test(error.message)) {
+      throw new Error("Koneksi ke Supabase terputus saat mengirim listing. Periksa koneksi internet dan VITE_SUPABASE_URL pada pengaturan Vercel, lalu muat ulang portal. Jika terus terjadi, pastikan create_partner_listing_submission tersedia di Supabase.");
+    }
+    if (error instanceof Error && /could not find the function|schema cache|PGRST202/i.test(error.message)) {
+      throw new Error("Fungsi pengiriman listing belum tersedia di Supabase. Terapkan ulang supabase/schema.sql, lalu coba kembali.");
+    }
+    throw error;
+  }
 }
 
 export async function reviewStoreSubmission(session: SupabaseSession, submissionId: string, decision: "approve" | "reject", note = ""): Promise<void> {
