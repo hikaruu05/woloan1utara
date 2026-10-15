@@ -87,7 +87,7 @@ export const VillageMapAndContact: React.FC = () => {
 
           {/* Contact / Inquiry Form & KKT Highlight */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="rounded-3xl border border-orange-200 bg-white p-6 shadow-sm sm:p-8">
+            <div className="rounded-3xl border border-brand-200 bg-white p-6 shadow-sm sm:p-8">
               <h3 className="font-serif text-xl font-bold text-wood-950">Informasi Kontak</h3>
               <p className="mt-2 text-sm leading-6 text-warm-700">Saluran pesan langsung belum tersedia. Kami akan menampilkan kontak kantor setelah petugas mengonfirmasi nomor dan alamat email resmi.</p>
             </div>

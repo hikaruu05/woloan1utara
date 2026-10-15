@@ -3,6 +3,16 @@
 @tailwind utilities;
 
 @layer base {
+  body {
+    margin: 0;
+    background-color: #FAF7F2;
+  }
+
+  :focus-visible {
+    outline: 2px solid #B43835;
+    outline-offset: 4px;
+  }
+
   html {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
@@ -10,17 +20,17 @@
 
 /* Custom Wood Grain Texture & Subtle Background Accents */
 .bg-wood-pattern {
-  background-color: #FFF8F2;
-  background-image: radial-gradient(rgba(169, 79, 64, 0.08) 1px, transparent 0);
+  background-color: #FAF7F2;
+  background-image: radial-gradient(rgba(150, 43, 43, 0.05) 1px, transparent 0);
   background-size: 24px 24px;
 }
 
 .wood-gradient-overlay {
-  background: linear-gradient(180deg, rgba(66, 31, 34, 0.75) 0%, rgba(97, 49, 49, 0.9) 100%);
+  background: linear-gradient(180deg, rgba(52, 21, 27, 0.75) 0%, rgba(86, 33, 39, 0.9) 100%);
 }
 
 .hero-overlay {
-  background: linear-gradient(135deg, rgba(107, 48, 51, 0.85) 0%, rgba(145, 71, 69, 0.82) 100%);
+  background: linear-gradient(135deg, rgba(86, 33, 39, 0.85) 0%, rgba(150, 43, 43, 0.82) 100%);
 }
 
 /* Custom subtle scrollbar */
@@ -29,14 +39,14 @@
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #FFF4EA;
+  background: #F3EDE5;
 }
 ::-webkit-scrollbar-thumb {
-  background: #F08A5D;
+  background: #D5C6B7;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #D96558;
+  background: #B43835;
 }
 
 /* Dialog & Glassmorphism */
@@ -44,12 +54,22 @@
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(234, 209, 193, 0.6);
+  border: 1px solid rgba(230, 220, 208, 0.6);
 }
 
 .glass-dark {
-  background: rgba(97, 49, 49, 0.88);
+  background: rgba(86, 33, 39, 0.88);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(240, 138, 93, 0.25);
+  border: 1px solid rgba(228, 149, 135, 0.25);
+}
+
+/* Ivory surfaces let the brick-red accents and local photography stand out. */
+.hero-surface {
+  background: radial-gradient(ellipse at 85% 15%, rgba(249, 225, 219, 0.8), transparent 55%),
+    linear-gradient(180deg, #FAF7F2, #FFFCF9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
 }
