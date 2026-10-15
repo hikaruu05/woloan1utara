@@ -33,8 +33,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </div>
 
             <p className="text-xs sm:text-sm text-wood-300 leading-relaxed max-w-sm">
-              Portal informasi untuk mengenal rumah panggung, usaha warga, dan
-              destinasi Woloan 1 Utara.
+              Portal informasi untuk mengenal kelurahan Woloan 1 Utara
             </p>
 
             <div className="pt-2 flex items-center gap-2 text-xs text-amber-300/90 font-medium">
@@ -103,7 +102,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   onClick={() => onNavigate("katalog-rumah")}
                   className="hover:text-amber-300 transition-colors text-left font-medium"
                 >
-                  🏡 Halaman Katalog Rumah Panggung
+                  Halaman Katalog Rumah Panggung
                 </button>
               </li>
               <li>
@@ -111,7 +110,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   onClick={() => onNavigate("katalog-umkm")}
                   className="hover:text-amber-300 transition-colors text-left font-medium"
                 >
-                  🛍️ Halaman Direktori Toko UMKM
+                  Halaman Direktori Toko UMKM
                 </button>
               </li>
               <li>
@@ -119,7 +118,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   onClick={() => onNavigate("katalog-destinasi")}
                   className="hover:text-amber-300 transition-colors text-left font-medium"
                 >
-                  🧭 Destinasi Wisata
+                  Destinasi Wisata
                 </button>
               </li>
             </ul>

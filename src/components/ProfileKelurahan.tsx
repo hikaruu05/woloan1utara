@@ -261,7 +261,7 @@ export const ProfileKelurahan: React.FC = () => {
                 Pelayan masyarakat yang berdedikasi memajukan Woloan Satu Utara
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {VILLAGE_OFFICIALS.map((official, idx) => (
                   <div
                     key={idx}
@@ -295,37 +295,37 @@ export const ProfileKelurahan: React.FC = () => {
             {/* Kepala Lingkungan (Pala) */}
             <div className="space-y-6">
               <div className="bg-warm-100/70 rounded-2xl p-5 sm:p-7 border border-wood-200">
-              <h4 className="font-serif text-lg font-bold text-wood-950 mb-1 text-center">
-                Kepala Lingkungan (Pala) Woloan Satu Utara
-              </h4>
-              <p className="text-xs text-warm-600 text-center mb-6">
-                Ujung tombak pelayanan ketertiban dan kemasyarakatan di tingkat
-                lingkungan
-              </p>
+                <h4 className="font-serif text-lg font-bold text-wood-950 mb-1 text-center">
+                  Kepala Lingkungan (Pala) Woloan Satu Utara
+                </h4>
+                <p className="text-xs text-warm-600 text-center mb-6">
+                  Ujung tombak pelayanan ketertiban dan kemasyarakatan di
+                  tingkat lingkungan
+                </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {LINGKUNGAN_HEADS.map((head, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white rounded-xl p-4 border border-warm-200 shadow-2xs hover:border-wood-400 transition-colors min-w-0"
-                  >
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-forest-700 bg-forest-50 px-2 py-0.5 rounded border border-forest-200">
-                      Lingkungan {idx + 1}
-                    </span>
-                    <h5 className="font-bold text-sm text-warm-900 mt-2 break-words">
-                      {head.name || "Nama belum tersedia"}
-                    </h5>
-                    <p className="text-xs text-wood-700 font-medium">
-                      {head.role}
-                    </p>
-                    {head.phone && (
-                      <p className="text-[11px] text-warm-500 mt-2 font-mono">
-                        Kontak: {head.phone}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {LINGKUNGAN_HEADS.map((head, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white rounded-xl p-4 border border-warm-200 shadow-2xs hover:border-wood-400 transition-colors min-w-0"
+                    >
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-forest-700 bg-forest-50 px-2 py-0.5 rounded border border-forest-200">
+                        Lingkungan {idx + 1}
+                      </span>
+                      <h5 className="font-bold text-sm text-warm-900 mt-2 break-words">
+                        {head.name || "Nama belum tersedia"}
+                      </h5>
+                      <p className="text-xs text-wood-700 font-medium">
+                        {head.role}
                       </p>
-                    )}
-                  </div>
-                ))}
-              </div>
+                      {head.phone && (
+                        <p className="text-[11px] text-warm-500 mt-2 font-mono">
+                          Kontak: {head.phone}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="bg-warm-100/70 rounded-2xl p-5 sm:p-7 border border-wood-200">
@@ -333,7 +333,8 @@ export const ProfileKelurahan: React.FC = () => {
                   Wakil Kepala Lingkungan
                 </h4>
                 <p className="text-xs text-warm-600 text-center mb-6">
-                  Perwakilan pelayanan untuk enam lingkungan di Woloan Satu Utara
+                  Perwakilan pelayanan untuk enam lingkungan di Woloan Satu
+                  Utara
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

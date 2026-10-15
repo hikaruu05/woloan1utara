@@ -4,34 +4,18 @@ export const VILLAGE_OFFICIALS: VillageOfficial[] = [
   {
     name: "Irma A. Kopalit, ST",
     position: "Lurah Woloan Satu Utara",
-    photoUrl:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
-    nip: "19760812 200501 1 008",
+    photoUrl: "",
     phone: "0812-4411-XXXX",
   },
   {
-    name: "Marietje Walangitan, SE",
+    name: "Julinda Suharto, SE",
     position: "Sekretaris Kelurahan",
-    photoUrl:
-      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80",
-    nip: "19820315 200804 2 003",
-    phone: "0813-5522-XXXX",
+    photoUrl: "",
   },
   {
-    name: "Stevanus Runtuwene, S.STP",
-    position: "Kasi Pemerintahan, Ketentraman & Ketertiban",
-    photoUrl:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
-    nip: "19890520 201202 1 004",
-    phone: "0821-6633-XXXX",
-  },
-  {
-    name: "Fience Kaunang, S.Pd",
-    position: "Kasi Perekonomian & Kesejahteraan Sosial",
-    photoUrl:
-      "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80",
-    nip: "19851108 201001 2 015",
-    phone: "0852-7744-XXXX",
+    name: "Nixon M. Moningka, S.Sos",
+    position: "Kesejahteraan Rakyat",
+    photoUrl: "",
   },
 ];
 
@@ -39,44 +23,37 @@ export const LINGKUNGAN_HEADS = [
   {
     name: "Fransiskus Taroreh",
     role: "Kepala Lingkungan I (Pala)",
-    phone: "0812-4401-0101",
   },
   {
     name: "Aden Poluan",
     role: "Kepala Lingkungan II (Pala)",
-    phone: "0813-4402-0202",
   },
   {
     name: "Falery Gigir",
     role: "Kepala Lingkungan III (Pala)",
-    phone: "0821-4403-0303",
   },
   {
     name: "Albert Tangkuman",
     role: "Kepala Lingkungan IV (Pala)",
-    phone: "0852-4404-0404",
   },
   {
-    name: "",
+    name: "Yeni Kandow",
     role: "Kepala Lingkungan V (Pala)",
-    phone: "",
   },
   {
     name: "Mouris Lumi",
     role: "Kepala Lingkungan VI (Pala)",
-    phone: "",
   },
 ];
 
 export const LINGKUNGAN_DEPUTIES = [
-  { name: "", role: "Wakil Kepala Lingkungan I", phone: "" },
-  { name: "Maya Langkay", role: "Wakil Kepala Lingkungan II", phone: "" },
-  { name: "Junaidi Kojongian", role: "Wakil Kepala Lingkungan III", phone: "" },
-  { name: "Jenny Wengkang", role: "Wakil Kepala Lingkungan IV", phone: "" },
-  { name: "Dani Mongdong", role: "Wakil Kepala Lingkungan V", phone: "" },
-  { name: "Sherly Kandow", role: "Wakil Kepala Lingkungan VI", phone: "" },
+  { name: "Olga Mangare", role: "Wakil Kepala Lingkungan I" },
+  { name: "Maya Langkay", role: "Wakil Kepala Lingkungan II" },
+  { name: "Junaidi Kojongian", role: "Wakil Kepala Lingkungan III" },
+  { name: "Jenny Wengkang", role: "Wakil Kepala Lingkungan IV" },
+  { name: "Dani Mongdong", role: "Wakil Kepala Lingkungan V" },
+  { name: "Sherly Kandow", role: "Wakil Kepala Lingkungan VI" },
 ];
-
 
 export const WOOD_SPECIALITIES = [
   {
