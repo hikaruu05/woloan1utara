@@ -318,11 +318,6 @@ export const ProfileKelurahan: React.FC = () => {
                       <p className="text-xs text-wood-700 font-medium">
                         {head.role}
                       </p>
-                      {head.phone && (
-                        <p className="text-[11px] text-warm-500 mt-2 font-mono">
-                          Kontak: {head.phone}
-                        </p>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -352,11 +347,6 @@ export const ProfileKelurahan: React.FC = () => {
                       <p className="text-xs text-wood-700 font-medium">
                         {deputy.role}
                       </p>
-                      {deputy.phone && (
-                        <p className="text-[11px] text-warm-500 mt-2 font-mono">
-                          Kontak: {deputy.phone}
-                        </p>
-                      )}
                     </div>
                   ))}
                 </div>
