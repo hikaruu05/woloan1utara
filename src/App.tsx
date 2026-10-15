@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DataProvider } from './context/DataContext';
+import { DataProvider, useData } from './context/DataContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { ProfileKelurahan } from './components/ProfileKelurahan';
@@ -21,6 +21,7 @@ import { CatalogShortcuts } from './components/CatalogShortcuts';
 import { RumahPanggung, UMKMStore, UMKMProductItem } from './types';
 
 export const AppContent: React.FC = () => {
+  const { accountId } = useData();
   // Halaman portal: beranda, katalog, destinasi, atau admin.
   const [currentPage, setCurrentPage] = useState<string>(() => {
     const hash = window.location.hash.replace('#/', '').replace('#', '');
@@ -175,8 +176,8 @@ export const AppContent: React.FC = () => {
           <DestinationsPage onBackToHome={() => handleNavigate('beranda')} />
         )}
 
-        {currentPage === 'admin' && <AdminPage />}
-        {currentPage === 'mitra' && <PartnerPage />}
+        {currentPage === 'admin' && <AdminPage key={accountId || "anonymous"} />}
+        {currentPage === 'mitra' && <PartnerPage key={accountId || "anonymous"} />}
       </main>
 
       {/* Footer */}

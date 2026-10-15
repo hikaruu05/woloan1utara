@@ -298,6 +298,12 @@ declare
   listing_status text;
 begin
   if not (select public.is_portal_admin()) then raise exception 'Akses petugas diperlukan.' using errcode = '42501'; end if;
+  select * into submission from public.partner_submissions where id = p_submission_id;
+  if not found then raise exception 'Pengajuan tidak ditemukan.' using errcode = 'P0002'; end if;
+  -- Lock the account before the submission, matching the unlink trigger's lock order.
+  perform 1 from public.partner_accounts a where a.user_id = submission.user_id
+    and a.listing_kind = submission.listing_kind and a.listing_id = submission.listing_id for update;
+  if not found then raise exception 'Tautan akun mitra telah dicabut. Pengajuan ini tidak dapat diterbitkan.' using errcode = '42501'; end if;
   select * into submission from public.partner_submissions where id = p_submission_id for update;
   if not found or submission.status <> 'pending' then raise exception 'Pengajuan tidak ditemukan atau sudah ditinjau.' using errcode = 'P0002'; end if;
   if submission.listing_kind = 'houses' then select status into listing_status from public.houses where id = submission.listing_id;
@@ -354,7 +360,7 @@ begin
       raise exception 'Tambahkan minimal satu produk sebelum mengirim usaha.' using errcode = '22023';
     end if;
   end if;
-  normalized_payload := p_payload || jsonb_build_object('id', new_listing_id, 'isVerified', false);
+  normalized_payload := p_payload || jsonb_build_object('id', new_listing_id, 'isVerified', false, 'createdAt', to_char(now(), 'YYYY-MM-DD'));
   if account.listing_kind = 'houses' then
     insert into public.houses(id, payload, status) values (new_listing_id, normalized_payload, 'draft');
   elsif account.listing_kind = 'stores' then
@@ -370,6 +376,72 @@ end;
 $$;
 revoke all on function public.create_partner_listing_submission(jsonb) from public, anon;
 grant execute on function public.create_partner_listing_submission(jsonb) to authenticated;
+
+-- Old pending submissions must not overwrite a listing after ownership changes.
+create or replace function public.close_unlinked_partner_submissions()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if OLD.listing_id is not null and
+    (NEW.listing_id is distinct from OLD.listing_id or NEW.listing_kind is distinct from OLD.listing_kind) then
+    update public.partner_submissions set status = 'rejected', reviewed_at = now(),
+      reviewed_by = (select auth.uid()), review_note = 'Tautan akun mitra telah dicabut oleh petugas.'
+    where user_id = OLD.user_id and listing_kind = OLD.listing_kind and listing_id = OLD.listing_id and status = 'pending';
+  end if;
+  return NEW;
+end;
+$$;
+revoke all on function public.close_unlinked_partner_submissions() from public, anon, authenticated;
+drop trigger if exists close_unlinked_partner_submissions on public.partner_accounts;
+create trigger close_unlinked_partner_submissions after update of listing_id, listing_kind on public.partner_accounts
+for each row execute function public.close_unlinked_partner_submissions();
+
+-- Apply the same minimum shape checks to first listings and subsequent edits.
+-- Locking the account also prevents a submission racing with an unlink operation.
+create or replace function public.validate_partner_submission()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare
+  account public.partner_accounts%rowtype;
+  field_name text;
+  required_fields text[];
+  product jsonb;
+begin
+  select * into account from public.partner_accounts where user_id = NEW.user_id for update;
+  if not found or account.listing_kind <> NEW.listing_kind or account.listing_id is distinct from NEW.listing_id then
+    raise exception 'Listing tidak terhubung ke akun mitra.' using errcode = '42501';
+  end if;
+  if account.must_change_password then raise exception 'Ganti kata sandi sementara sebelum mengirim listing.' using errcode = '42501'; end if;
+  if NEW.payload is null or jsonb_typeof(NEW.payload) <> 'object' then raise exception 'Data listing tidak valid.' using errcode = '22023'; end if;
+  required_fields := case NEW.listing_kind
+    when 'stores' then array['name','ownerName','category','phone','address']
+    when 'houses' then array['title','type','craftsmanName','craftsmanPhone','craftsmanAddress']
+    else array['name','category','address'] end;
+  foreach field_name in array required_fields loop
+    if jsonb_typeof(NEW.payload->field_name) is distinct from 'string' or btrim(NEW.payload->>field_name) = '' then
+      raise exception 'Lengkapi informasi utama listing: %.', field_name using errcode = '22023';
+    end if;
+  end loop;
+  foreach field_name in array array['woodTypes','features','facilities','activities','galleryUrls'] loop
+    if NEW.payload ? field_name and jsonb_typeof(NEW.payload->field_name) <> 'array' then
+      raise exception 'Format daftar % tidak valid.', field_name using errcode = '22023';
+    end if;
+  end loop;
+  if NEW.listing_kind = 'stores' then
+    if jsonb_typeof(NEW.payload->'products') is distinct from 'array' then raise exception 'Data produk tidak valid.' using errcode = '22023'; end if;
+    if jsonb_array_length(NEW.payload->'products') = 0 then raise exception 'Tambahkan minimal satu produk.' using errcode = '22023'; end if;
+    for product in select value from jsonb_array_elements(NEW.payload->'products') loop
+      if jsonb_typeof(product) <> 'object' or coalesce(btrim(product->>'name'), '') = '' then
+        raise exception 'Nama setiap produk wajib diisi.' using errcode = '22023';
+      end if;
+    end loop;
+  end if;
+  NEW.payload := NEW.payload || jsonb_build_object('id', NEW.listing_id, 'isVerified', false);
+  return NEW;
+end;
+$$;
+revoke all on function public.validate_partner_submission() from public, anon, authenticated;
+drop trigger if exists validate_partner_submission on public.partner_submissions;
+create trigger validate_partner_submission before insert on public.partner_submissions
+for each row execute function public.validate_partner_submission();
 
 -- Public bucket objects are publicly readable. Partners may only add new files to their own prefix.
 drop policy if exists "partners upload own store images" on storage.objects;

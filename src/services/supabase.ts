@@ -1,3 +1,4 @@
+import { optimizeImage } from "../utils/images";
 import {
   AdminListing,
   ListingKind,
@@ -80,7 +81,7 @@ async function requestJson<T>(url: string, init: RequestInit): Promise<T> {
     const message =
       body?.msg || body?.message || body?.error_description || body?.error ||
       "Permintaan tidak dapat diproses.";
-    throw new Error(message);
+    throw Object.assign(new Error(message), { status: response.status });
   }
   return body as T;
 }
@@ -221,13 +222,15 @@ export async function fetchPartnerAccounts(session: SupabaseSession): Promise<Pa
   );
 }
 
-export async function submitStoreChanges(session: SupabaseSession, kind: ListingKind, listingId: string, payload: Record<string, unknown>): Promise<void> {
+export async function submitStoreChanges(session: SupabaseSession, kind: ListingKind, listingId: string, payload: Record<string, unknown>): Promise<StoreSubmission> {
   const { url } = requireConfig();
-  await requestJson<unknown>(`${url}/rest/v1/partner_submissions`, {
+  const rows = await requestJson<StoreSubmission[]>(`${url}/rest/v1/partner_submissions`, {
     method: "POST",
-    headers: { ...apiHeaders(session.access_token), Prefer: "return=minimal" },
+    headers: { ...apiHeaders(session.access_token), Prefer: "return=representation" },
     body: JSON.stringify({ listing_kind: kind, listing_id: listingId, user_id: session.user.id, payload, status: "pending" }),
   });
+  if (!rows[0]) throw new Error("Pengajuan terkirim, tetapi status belum dapat dibaca. Muat ulang sebelum mengirim lagi.");
+  return rows[0];
 }
 
 export async function createPartnerListingSubmission(session: SupabaseSession, payload: Record<string, unknown>): Promise<string> {
@@ -313,19 +316,7 @@ export async function changePartnerPassword(session: SupabaseSession, newPasswor
 }
 
 export async function uploadPartnerListingImage(file: File, session: SupabaseSession): Promise<string> {
-  const optimized = await optimizeImage(file);
-  const { url, anonKey } = requireConfig();
-  const objectPath = `partners/${session.user.id}/${crypto.randomUUID()}.webp`;
-  const response = await fetch(`${url}/storage/v1/object/catalog/${objectPath}`, {
-    method: "POST",
-    headers: { apikey: anonKey, Authorization: `Bearer ${session.access_token}`, "Content-Type": "image/webp", "x-upsert": "false" },
-    body: optimized,
-  });
-  if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    throw new Error(body?.message || "Foto gagal diunggah. Coba lagi atau hubungi petugas.");
-  }
-  return `${url}/storage/v1/object/public/catalog/${objectPath}`;
+  return uploadCatalogImage(file, session, `partners/${session.user.id}/${crypto.randomUUID()}.webp`);
 }
 
 export async function upsertListing(
@@ -375,53 +366,32 @@ export async function deleteListing(
   });
 }
 
-export async function uploadListingImage(file: File, session: SupabaseSession) {
-  const optimized = await optimizeImage(file);
-  const { url } = requireConfig();
-  const filename = `${crypto.randomUUID()}.webp`;
-  const objectPath = `listings/${filename}`;
-  const response = await fetch(`${url}/storage/v1/object/catalog/${objectPath}`, {
-    method: "POST",
-    headers: {
-      apikey: requireConfig().anonKey,
-      Authorization: `Bearer ${session.access_token}`,
-      "Content-Type": "image/webp",
-      "x-upsert": "false",
-    },
-    body: optimized,
-  });
-  if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    throw new Error(body?.message || "Foto gagal diunggah. Periksa aturan penyimpanan.");
-  }
-  return `${url}/storage/v1/object/public/catalog/${objectPath}`;
+export async function uploadListingImage(file: File, session: SupabaseSession): Promise<string> {
+  return uploadCatalogImage(file, session, `listings/${crypto.randomUUID()}.webp`);
 }
 
-async function optimizeImage(file: File): Promise<Blob> {
-  if (!file.type.startsWith("image/")) {
-    throw new Error("Pilih file gambar seperti JPG, PNG, atau WebP.");
+async function uploadCatalogImage(file: File, session: SupabaseSession, objectPath: string): Promise<string> {
+  const optimized = await optimizeImage(file);
+  const { url, anonKey } = requireConfig();
+  let response: Response;
+  try {
+    response = await fetch(`${url}/storage/v1/object/catalog/${objectPath}`, {
+      method: "POST",
+      headers: { apikey: anonKey, Authorization: `Bearer ${session.access_token}`, "Content-Type": "image/webp", "x-upsert": "false" },
+      body: optimized,
+    });
+  } catch {
+    throw new Error("Koneksi terputus saat mengunggah foto. Periksa internet lalu pilih ulang foto untuk mencoba lagi.");
   }
-  if (file.size > 15 * 1024 * 1024) {
-    throw new Error("Ukuran foto awal maksimal 15 MB.");
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    if (response.status === 413 || /maximum allowed size|payload too large|exceeded.*size/i.test(body?.message || body?.error || "")) {
+      throw new Error("Foto sudah dikompresi, tetapi batas penyimpanan server menolaknya. Petugas perlu memeriksa bucket catalog (WebP, maksimal 1.500.000 byte).");
+    }
+    if (response.status === 401 || response.status === 403) {
+      throw new Error("Sesi atau izin unggah tidak berlaku. Masuk kembali; jika masih gagal, minta petugas memeriksa izin penyimpanan akun.");
+    }
+    throw new Error(body?.message || "Foto gagal diunggah. Coba lagi atau hubungi petugas.");
   }
-
-  const bitmap = await createImageBitmap(file);
-  const maxSide = 1600;
-  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Foto tidak dapat diproses di perangkat ini.");
-  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-
-  const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, "image/webp", 0.78),
-  );
-  if (!blob) throw new Error("Konversi WebP gagal. Coba foto lain.");
-  if (blob.size > 1_500_000) {
-    throw new Error("Hasil foto masih terlalu besar. Pilih foto dengan ukuran lebih kecil.");
-  }
-  return blob;
+  return `${url}/storage/v1/object/public/catalog/${objectPath}`;
 }

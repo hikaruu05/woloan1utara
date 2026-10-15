@@ -23,6 +23,7 @@ function googleMapsLink(lat: number, lon: number) {
 }
 
 function validCoordinates(lat: string, lon: string) {
+  if (!lat.trim() || !lon.trim()) return false;
   const latitude = Number(lat);
   const longitude = Number(lon);
   return Number.isFinite(latitude) && Number.isFinite(longitude)
@@ -35,6 +36,13 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({ value, onChange,
   const [longitude, setLongitude] = useState(initial.lon);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [previousValue, setPreviousValue] = useState(value);
+  if (previousValue !== value) {
+    setPreviousValue(value);
+    const parsed = coordinatesFrom(value);
+    setLatitude(parsed.lat);
+    setLongitude(parsed.lon);
+  }
   const coordinates = useMemo(() => validCoordinates(latitude, longitude)
     ? { lat: Number(latitude), lon: Number(longitude) }
     : null, [latitude, longitude]);

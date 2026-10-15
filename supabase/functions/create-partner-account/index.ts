@@ -67,6 +67,7 @@ Deno.serve(async (request) => {
       return reply(413, { error: "Permintaan terlalu besar." });
     }
     body = JSON.parse(rawBody);
+    if (!body || typeof body !== "object" || Array.isArray(body)) return reply(400, { error: "Isi permintaan tidak valid." });
   } catch {
     return reply(400, { error: "Isi permintaan tidak valid." });
   }
@@ -127,12 +128,14 @@ Deno.serve(async (request) => {
       .maybeSingle();
     if (membershipError) return reply(500, { error: "Status akun mitra belum dapat diperiksa." });
     if (existingAccount && existingAccount.listing_id && existingAccount.listing_kind !== listingKind) return reply(409, { error: "Akun ini masih terhubung ke jenis listing lain. Cabut tautan listing lama terlebih dahulu." });
-    const { error: resetError } = await adminClient.auth.admin.updateUserById(existingUserId, { password: temporaryPassword });
-    if (resetError) return reply(400, { error: "Kata sandi login lama belum dapat diatur ulang." });
     partnerUserId = existingUserId;
     if (existingAccount) {
+      // Finish fallible account metadata updates before changing the password.
+      // Otherwise a database failure would leave the new credentials undisplayed.
       const { error: updateError } = await adminClient.from("partner_accounts").update({ listing_kind: listingKind, ...(username ? { login_username: username } : {}), must_change_password: true }).eq("user_id", existingUserId);
       if (updateError) return reply(500, { error: "Akun lama belum dapat diperbarui." });
+      const { error: resetError } = await adminClient.auth.admin.updateUserById(existingUserId, { password: temporaryPassword });
+      if (resetError) return reply(400, { error: "Kata sandi login lama belum dapat diatur ulang. Kata sandi sebelumnya masih berlaku; coba atur ulang kembali." });
       return reply(200, { ok: true, reset: true, contractVersion: 4 });
     }
   } else {
@@ -167,5 +170,10 @@ Deno.serve(async (request) => {
     return reply(500, { error: "Akun belum dapat dibuat. Coba lagi atau hubungi pengelola." });
   }
 
-  return reply(200, { ok: true, contractVersion: 4 });
+  if (existingUserId) {
+    const { error: resetError } = await adminClient.auth.admin.updateUserById(partnerUserId, { password: temporaryPassword });
+    if (resetError) return reply(400, { error: "Akun sudah disiapkan, tetapi kata sandi belum diatur ulang. Kata sandi sebelumnya masih berlaku; ulangi proses reset." });
+  }
+
+  return reply(200, { ok: true, ...(existingUserId ? { reset: true } : {}), contractVersion: 4 });
 });

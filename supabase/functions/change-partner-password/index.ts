@@ -45,12 +45,13 @@ Deno.serve(async (request) => {
       return reply(413, { error: "Permintaan terlalu besar." });
     }
     body = JSON.parse(rawBody);
+    if (!body || typeof body !== "object" || Array.isArray(body)) return reply(400, { error: "Isi permintaan tidak valid." });
   } catch {
     return reply(400, { error: "Isi permintaan tidak valid." });
   }
   const newPassword = typeof body.newPassword === "string" ? body.newPassword : "";
   if (newPassword.length < 12 || newPassword.length > 128) {
-    return reply(400, { error: "Buat kata sandi minimal 12 karakter." });
+    return reply(400, { error: "Buat kata sandi sepanjang 12–128 karakter." });
   }
 
   const callerClient = createClient(supabaseUrl, publicKey, {
