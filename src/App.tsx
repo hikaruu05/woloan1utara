@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { DataProvider } from './context/DataContext';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -195,6 +196,8 @@ export const AppContent: React.FC = () => {
       {/* Toast Feedback Notifications */}
       <ToastContainer />
 
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 };
