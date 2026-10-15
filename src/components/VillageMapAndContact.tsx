@@ -1,9 +1,12 @@
-import React from 'react';
-import { MapPin, Phone, Clock, GraduationCap, Compass } from 'lucide-react';
+import React from "react";
+import { MapPin, Phone, Clock, GraduationCap, Compass } from "lucide-react";
 
 export const VillageMapAndContact: React.FC = () => {
   return (
-    <section id="kontak" className="scroll-mt-24 py-16 lg:py-24 bg-warm-100/60 border-t border-wood-200">
+    <section
+      id="kontak"
+      className="scroll-mt-24 py-16 lg:py-24 bg-warm-100/60 border-t border-wood-200"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
@@ -15,7 +18,8 @@ export const VillageMapAndContact: React.FC = () => {
             Lokasi Kelurahan & Hubungi Kami
           </h2>
           <p className="mt-3 text-warm-700 text-sm sm:text-base leading-relaxed">
-            Temukan lokasi kelurahan dan informasi kunjungan di Woloan 1 Utara. Saluran kontak resmi akan dimuat setelah dikonfirmasi.
+            Temukan lokasi kelurahan dan informasi kunjungan di Woloan 1 Utara.
+            Saluran kontak resmi akan dimuat setelah dikonfirmasi.
           </p>
         </div>
 
@@ -27,7 +31,7 @@ export const VillageMapAndContact: React.FC = () => {
               <div className="aspect-[16/10] w-full bg-warm-200 relative">
                 <iframe
                   title="Peta Kelurahan Woloan Satu Utara"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15954.912643892784!2d124.7952763!3d1.3283333!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x32873ee0ff0fdb39%3A0x6e9f138e217d473b!2sWoloan%20Satu%2C%20Kec.%20Tomohon%20Bar.%2C%20Kota%20Tomohon%2C%20Sulawesi%20Utara!5e0!3m2!1sid!2sid!4v1700000000000!5m2!1sid!2sid"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d9774.52008326516!2d124.80911714450899!3d1.324638220649658!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x32876c61672ed08b%3A0xa93c835d0e1f8c66!2sNorth%20Woloan%20Satu%2C%20Tomohon%20Barat%2C%20Tomohon%20City%2C%20North%20Sulawesi!5e1!3m2!1sen!2sid!4v1792076420473!5m2!1sen!2sid"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
@@ -46,16 +50,32 @@ export const VillageMapAndContact: React.FC = () => {
                 </h4>
                 <ul className="text-xs sm:text-sm text-warm-700 space-y-2">
                   <li className="flex items-start gap-2">
-                    <span className="font-bold text-wood-800">• Dari Pusat Kota Tomohon:</span>
-                    <span>Hanya berjarak sekitar 3 km (± 8–10 menit perjalanan darat ke arah Tomohon Barat).</span>
+                    <span className="font-bold text-wood-800">
+                      • Dari Pusat Kota Tomohon:
+                    </span>
+                    <span>
+                      Hanya berjarak sekitar 3 km (± 8–10 menit perjalanan darat
+                      ke arah Tomohon Barat).
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="font-bold text-wood-800">• Dari Bandara Sam Ratulangi (Manado):</span>
-                    <span>± 35 km menyusuri jalur wisata Manado - Tomohon (± 60 menit dengan mobil).</span>
+                    <span className="font-bold text-wood-800">
+                      • Dari Bandara Sam Ratulangi (Manado):
+                    </span>
+                    <span>
+                      ± 35 km menyusuri jalur wisata Manado - Tomohon (± 60
+                      menit dengan mobil).
+                    </span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="font-bold text-wood-800">• Suasana Kunjungan:</span>
-                    <span>Di sepanjang jalan utama Woloan 1 Utara, pengunjung dapat melihat langsung proses perakitan rumah panggung kayu di bengkel-bengkel terbuka.</span>
+                    <span className="font-bold text-wood-800">
+                      • Suasana Kunjungan:
+                    </span>
+                    <span>
+                      Di sepanjang jalan utama Woloan 1 Utara, pengunjung dapat
+                      melihat langsung proses perakitan rumah panggung kayu di
+                      bengkel-bengkel terbuka.
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -67,9 +87,12 @@ export const VillageMapAndContact: React.FC = () => {
                 <div className="w-9 h-9 rounded-xl bg-wood-100 text-wood-800 flex items-center justify-center mb-3">
                   <Clock className="w-5 h-5 text-wood-700" />
                 </div>
-                <h5 className="font-bold text-sm text-warm-900">Jam Pelayanan Kelurahan</h5>
+                <h5 className="font-bold text-sm text-warm-900">
+                  Jam Pelayanan Kelurahan
+                </h5>
                 <p className="text-xs text-warm-600 mt-1">
-                  Informasi jam pelayanan akan dimuat setelah dikonfirmasi oleh kelurahan.
+                  Informasi jam pelayanan akan dimuat setelah dikonfirmasi oleh
+                  kelurahan.
                 </p>
               </div>
 
@@ -77,9 +100,12 @@ export const VillageMapAndContact: React.FC = () => {
                 <div className="w-9 h-9 rounded-xl bg-forest-100 text-forest-800 flex items-center justify-center mb-3">
                   <Phone className="w-5 h-5 text-forest-700" />
                 </div>
-                <h5 className="font-bold text-sm text-warm-900">Saluran Kontak</h5>
+                <h5 className="font-bold text-sm text-warm-900">
+                  Saluran Kontak
+                </h5>
                 <p className="text-xs text-warm-600 mt-1">
-                  Nomor telepon dan email resmi belum tersedia untuk dipublikasikan.
+                  Nomor telepon dan email resmi belum tersedia untuk
+                  dipublikasikan.
                 </p>
               </div>
             </div>
@@ -88,8 +114,14 @@ export const VillageMapAndContact: React.FC = () => {
           {/* Contact / Inquiry Form & KKT Highlight */}
           <div className="lg:col-span-5 space-y-6">
             <div className="rounded-3xl border border-brand-200 bg-white p-6 shadow-sm sm:p-8">
-              <h3 className="font-serif text-xl font-bold text-wood-950">Informasi Kontak</h3>
-              <p className="mt-2 text-sm leading-6 text-warm-700">Saluran pesan langsung belum tersedia. Kami akan menampilkan kontak kantor setelah petugas mengonfirmasi nomor dan alamat email resmi.</p>
+              <h3 className="font-serif text-xl font-bold text-wood-950">
+                Informasi Kontak
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-warm-700">
+                Saluran pesan langsung belum tersedia. Kami akan menampilkan
+                kontak kantor setelah petugas mengonfirmasi nomor dan alamat
+                email resmi.
+              </p>
             </div>
 
             {/* KKT Credits Badge Box */}
@@ -108,9 +140,10 @@ export const VillageMapAndContact: React.FC = () => {
                 </div>
               </div>
               <p className="text-xs text-wood-200 leading-relaxed">
-                Platform ini dipersembahkan oleh Mahasiswa Kuliah Kerja Terpadu (KKT) dalam upaya 
-                mendukung akselerasi digital bagi Kelurahan Woloan Satu Utara. Bersama memajukan 
-                warisan budaya rumah panggung Minahasa dan memberdayakan seluruh UMKM warga.
+                Platform ini dipersembahkan oleh Mahasiswa Kuliah Kerja Terpadu
+                (KKT) dalam upaya mendukung akselerasi digital bagi Kelurahan
+                Woloan Satu Utara. Bersama memajukan warisan budaya rumah
+                panggung Minahasa dan memberdayakan seluruh UMKM warga.
               </p>
             </div>
           </div>
