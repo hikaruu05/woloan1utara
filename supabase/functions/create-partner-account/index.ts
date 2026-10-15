@@ -60,7 +60,7 @@ Deno.serve(async (request) => {
   }
   if (!adminRecord) return reply(403, { error: "Hanya admin kelurahan yang dapat membuat akun mitra." });
 
-  let body: { action?: unknown; contractVersion?: unknown; username?: unknown; listingKind?: unknown; listingId?: unknown; temporaryPassword?: unknown };
+  let body: { action?: unknown; contractVersion?: unknown; username?: unknown; listingKind?: unknown; listingId?: unknown; userId?: unknown; temporaryPassword?: unknown };
   try {
     const rawBody = await request.text();
     if (new TextEncoder().encode(rawBody).byteLength > 4096) {
@@ -72,6 +72,20 @@ Deno.serve(async (request) => {
     return reply(400, { error: "Isi permintaan tidak valid." });
   }
   if (body.contractVersion !== 4) return reply(409, { error: "Versi formulir akun tidak sesuai. Muat ulang situs lalu coba lagi." });
+  if (body.action === "delete") {
+    const targetId = typeof body.userId === "string" ? body.userId.trim() : "";
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(targetId)) return reply(400, { error: "Akun mitra tidak valid." });
+    if (targetId === user.id) return reply(403, { error: "Akun yang sedang Anda gunakan tidak dapat dihapus." });
+    const { data: deleted, error: deleteError } = await adminClient.rpc("delete_partner_auth_user", { p_user_id: targetId });
+    if (deleteError) {
+      if (deleteError.code === "PGRST202") return reply(503, { error: "Fungsi hapus akun belum tersedia. Terapkan migrasi penghapusan akun mitra di Supabase terlebih dahulu." });
+      if (deleteError.code === "42501" || deleteError.code === "23514") return reply(409, { error: deleteError.message });
+      console.error("Partner account deletion failed.", deleteError.code);
+      return reply(500, { error: "Akun belum dapat dihapus. Data akun dan foto tetap dipertahankan; coba lagi atau hubungi pengelola." });
+    }
+    if (typeof deleted !== "boolean") return reply(502, { error: "Respons penghapusan akun tidak valid. Muat ulang daftar akun sebelum mencoba lagi." });
+    return reply(200, { ok: true, deleted: true, alreadyDeleted: !deleted, contractVersion: 4 });
+  }
   const usernameInput = typeof body.username === "string" ? body.username.trim().toLowerCase() : "";
   const legacyEmail = usernameInput.includes("@") ? usernameInput : "";
   const username = legacyEmail ? "" : usernameInput;

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DataProvider, useData } from '../src/context/DataContext';
 import * as api from '../src/services/supabase';
 vi.mock('../src/services/supabase',()=>({
-  isSupabaseConfigured:true, readSavedSession:vi.fn(),saveSession:vi.fn(),fetchListings:vi.fn(),isAdministrator:vi.fn(),getPartnerAccount:vi.fn(),fetchPartnerListing:vi.fn(),fetchStoreSubmissions:vi.fn(),fetchPartnerAccounts:vi.fn(),refreshSession:vi.fn(),signIn:vi.fn(),signInPartner:vi.fn(),signOut:vi.fn(),submitStoreChanges:vi.fn(),createPartnerListingSubmission:vi.fn(),reviewStoreSubmission:vi.fn(),uploadPartnerListingImage:vi.fn(),createPartnerAccount:vi.fn(),unlinkPartnerAccount:vi.fn(),changePartnerPassword:vi.fn(),upsertListing:vi.fn(),uploadListingImage:vi.fn(),deleteListing:vi.fn()
+  isSupabaseConfigured:true, readSavedSession:vi.fn(),saveSession:vi.fn(),fetchListings:vi.fn(),isAdministrator:vi.fn(),getPartnerAccount:vi.fn(),fetchPartnerListing:vi.fn(),fetchStoreSubmissions:vi.fn(),fetchPartnerAccounts:vi.fn(),refreshSession:vi.fn(),signIn:vi.fn(),signInPartner:vi.fn(),signOut:vi.fn(),submitStoreChanges:vi.fn(),createPartnerListingSubmission:vi.fn(),reviewStoreSubmission:vi.fn(),uploadPartnerListingImage:vi.fn(),createPartnerAccount:vi.fn(),unlinkPartnerAccount:vi.fn(),deletePartnerAccount:vi.fn(),changePartnerPassword:vi.fn(),upsertListing:vi.fn(),uploadListingImage:vi.fn(),deleteListing:vi.fn()
 }));
 let data:ReturnType<typeof useData>;
 function Probe(){const value=useData();React.useEffect(()=>{data=value;});return null;}
@@ -50,5 +50,20 @@ describe('session and mutation recovery',()=>{
     const payload={name:'Shop',ownerName:'Owner',category:'kuliner',phone:'08123',address:'Woloan',products:[{id:'p',name:'Tea',price:'5000'}]};
     await act(async()=>data.submitPartnerListing(payload));expect(data.partnerSubmissions[0].status).toBe('pending');
     await expect(data.submitPartnerListing(payload)).rejects.toThrow('sedang diperiksa');expect(api.submitStoreChanges).toHaveBeenCalledOnce();
+  });
+});
+
+describe('admin partner account removal',()=>{
+  it('removes a deleted account from the dashboard while retaining catalog data',async()=>{
+    vi.mocked(api.fetchPartnerAccounts).mockResolvedValue([{user_id:'target',listing_kind:'stores',listing_id:null,login_username:'shop'}]);await mount();await loginAdmin();
+    await act(async()=>data.deletePartnerAccount('target'));expect(api.deletePartnerAccount).toHaveBeenCalledWith(expect.objectContaining({access_token:'access'}),'target');expect(data.partnerAccounts).toEqual([]);expect(api.deleteListing).not.toHaveBeenCalled();
+  });
+  it('blocks a still-linked account before sending a deletion request',async()=>{
+    vi.mocked(api.fetchPartnerAccounts).mockResolvedValue([{user_id:'target',listing_kind:'stores',listing_id:'store',login_username:'shop'}]);await mount();await loginAdmin();
+    await expect(data.deletePartnerAccount('target')).rejects.toThrow('Cabut tautan');expect(api.deletePartnerAccount).not.toHaveBeenCalled();
+  });
+  it('keeps the account in the list if the server fails',async()=>{
+    vi.mocked(api.fetchPartnerAccounts).mockResolvedValue([{user_id:'target',listing_kind:'stores',listing_id:null,login_username:'shop'}]);await mount();await loginAdmin();vi.mocked(api.deletePartnerAccount).mockRejectedValueOnce(new Error('Failed'));
+    await expect(data.deletePartnerAccount('target')).rejects.toThrow('Failed');expect(data.partnerAccounts).toHaveLength(1);
   });
 });

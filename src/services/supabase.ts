@@ -159,15 +159,24 @@ export async function signInPartner(username: string, password: string): Promise
 
 export async function refreshSession(session: SupabaseSession): Promise<SupabaseSession> {
   const { url, anonKey } = requireConfig();
-  const result = await requestJson<Omit<SupabaseSession, "expires_at"> & { expires_in: number }>(
-    `${url}/auth/v1/token?grant_type=refresh_token`,
-    {
-      method: "POST",
-      headers: { apikey: anonKey, "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: session.refresh_token }),
-    },
-  );
-  return { ...result, expires_at: Date.now() + result.expires_in * 1000 };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+  try {
+    const result = await requestJson<Omit<SupabaseSession, "expires_at"> & { expires_in: number }>(
+      `${url}/auth/v1/token?grant_type=refresh_token`,
+      {
+        method: "POST",
+        headers: { apikey: anonKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: session.refresh_token }),
+        signal: controller.signal,
+      },
+    );
+    if (controller.signal.aborted) throw new Error("Session refresh timed out");
+    return { ...result, expires_at: Date.now() + result.expires_in * 1000 };
+  } catch (error) {
+    if (controller.signal.aborted) throw new Error("Sesi belum dapat diperbarui setelah 30 detik. Periksa koneksi lalu coba lagi atau masuk kembali.");
+    throw error;
+  } finally { clearTimeout(timeout); }
 }
 
 export async function signOut(accessToken: string) {
@@ -302,6 +311,36 @@ export async function unlinkPartnerAccount(session: SupabaseSession, listingKind
   if (!response.ok && body?.error === "Listing ini belum terhubung ke akun mitra.") return;
   if (!response.ok) throw new Error(body?.error || "Tautan akun mitra belum dapat dicabut.");
   if (body?.contractVersion !== 4) throw new Error("Fungsi Supabase masih versi lama. Terapkan ulang create-partner-account.");
+}
+
+export async function deletePartnerAccount(session: SupabaseSession, userId: string): Promise<void> {
+  const { url, anonKey } = requireConfig();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+  try {
+    const response = await fetch(`${url}/functions/v1/create-partner-account`, {
+      method: "POST",
+      headers: { apikey: anonKey, Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete", contractVersion: 4, userId }),
+      signal: controller.signal,
+    });
+    const body = await response.json().catch(error => {
+      if (controller.signal.aborted) throw error;
+      return null;
+    });
+    if (!response.ok) {
+      if (response.status === 401) throw new Error("Sesi admin tidak valid atau telah berakhir. Silakan keluar lalu masuk kembali sebelum menghapus akun.");
+      if (response.status === 404 || body?.error === "Pilih jenis katalog yang valid." || body?.error === "Versi formulir akun tidak sesuai. Muat ulang situs lalu coba lagi.") {
+        throw new Error("Fungsi Supabase belum mendukung penghapusan akun. Pengelola perlu deploy ulang create-partner-account dan menerapkan migrasi penghapusan akun mitra.");
+      }
+      throw new Error(body?.error || body?.message || body?.msg || "Akun mitra belum dapat dihapus. Coba lagi atau hubungi pengelola.");
+    }
+    if (body?.contractVersion !== 4 || body?.deleted !== true) throw new Error("Fungsi Supabase belum mendukung penghapusan akun. Deploy ulang create-partner-account.");
+  } catch (error) {
+    if (controller.signal.aborted) throw new Error("Penghapusan belum mendapat respons setelah 30 detik. Muat ulang daftar untuk memeriksa status akun sebelum mencoba lagi.");
+    if (error instanceof TypeError) throw new Error("Koneksi terputus saat menghapus akun. Muat ulang daftar untuk memeriksa status sebelum mencoba lagi.");
+    throw error;
+  } finally { clearTimeout(timeout); }
 }
 
 export async function changePartnerPassword(session: SupabaseSession, newPassword: string): Promise<void> {

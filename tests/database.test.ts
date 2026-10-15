@@ -18,7 +18,7 @@ beforeAll(async()=>{
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     grant usage on schema auth,public,storage to anon,authenticated,service_role;
     create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
-    create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text);
+    create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text,owner uuid,owner_id text);
     alter table storage.objects enable row level security;
     grant select,insert,update,delete on storage.objects to authenticated; grant select on storage.objects to anon;
     create function storage.foldername(text) returns text[] language sql immutable as $$ select string_to_array($1,'/') $$;
@@ -26,6 +26,7 @@ beforeAll(async()=>{
   const schema=(await readFile(new URL('../supabase/schema.sql',import.meta.url),'utf8')).replace('create extension if not exists pgcrypto;','');
   await db.exec(schema);
   await db.exec(await readFile(new URL('../supabase/migrations/202610150001_partner_submission_guards.sql',import.meta.url),'utf8'));
+  await db.exec(await readFile(new URL('../supabase/migrations/202610150002_delete_partner_account.sql',import.meta.url),'utf8'));
   // Verify the schema can also be reapplied to an existing installation.
   await db.exec(schema);
   await db.query('insert into auth.users(id,email) values ($1,$2),($3,$4),($5,$6)',[admin,'admin@example.test',owner,'owner@example.test',other,'other@example.test']);
@@ -81,5 +82,38 @@ describe('database workflow and permissions',()=>{
     await root();await db.query('update public.partner_accounts set must_change_password=false where user_id=$1',[other]);await asUser(other);
     await expect(db.query('select public.create_partner_listing_submission($1::jsonb)',[JSON.stringify({title:'House',type:'tradisional'})])).rejects.toThrow('informasi utama');
     expect((await db.query('select * from public.houses')).rows).toHaveLength(0);expect((await db.query<{listing_id:string|null}>('select listing_id from public.partner_accounts where user_id=$1',[other])).rows[0].listing_id).toBeNull();
+  });
+});
+
+describe('transactional account removal',()=>{
+  const target='00000000-0000-4000-8000-000000000010';
+  const failedTarget='00000000-0000-4000-8000-000000000011';
+  const plainUser='00000000-0000-4000-8000-000000000012';
+  let savedListing:string;
+  it('permits only the service role and protects admin and non-partner accounts',async()=>{
+    await root();await db.query('insert into auth.users(id,email) values ($1,$2),($3,$4),($5,$6)',[target,'target@example.test',failedTarget,'failed@example.test',plainUser,'plain@example.test']);
+    await asUser(admin);await expect(db.query('select public.delete_partner_auth_user($1)',[target])).rejects.toThrow('permission denied');
+    await asUser('','service_role');await expect(db.query('select public.delete_partner_auth_user($1)',[admin])).rejects.toThrow('administrator');await expect(db.query('select public.delete_partner_auth_user($1)',[plainUser])).rejects.toThrow('bukan akun mitra');
+  });
+  it('blocks deletion while a listing is still linked',async()=>{
+    await root();const row=await db.query<{id:string}>("insert into public.stores(payload,status) values ($1::jsonb,'published') returning id",[JSON.stringify(payload)]);savedListing=row.rows[0].id;
+    await db.query("insert into public.partner_accounts(user_id,listing_kind,listing_id,must_change_password) values ($1,'stores',$2,false)",[target,savedListing]);
+    await asUser('','service_role');await expect(db.query('select public.delete_partner_auth_user($1)',[target])).rejects.toThrow('Cabut tautan');
+  });
+  it('deletes Auth, sessions and partner access, while preserving listings and photo URLs',async()=>{
+    await root();await db.exec('create table auth.sessions(id uuid primary key default gen_random_uuid(),user_id uuid references auth.users(id) on delete cascade)');await db.query('insert into auth.sessions(user_id) values ($1)',[target]);
+    await db.query("insert into storage.objects(bucket_id,name,owner_id,owner) values ('catalog','partners/photo.webp',$1,$2),('catalog','legacy-photo.webp',null,$2),('catalog','other-photo.webp',$3,null)",[target,target,other]);
+    await db.query("insert into public.partner_submissions(listing_kind,listing_id,user_id,payload) values ('stores',$1,$2,$3::jsonb)",[savedListing,target,JSON.stringify({...payload,id:savedListing})]);
+    await db.query('update public.partner_accounts set listing_id=null where user_id=$1',[target]);await asUser('','service_role');expect((await db.query<{deleted:boolean}>('select public.delete_partner_auth_user($1) as deleted',[target])).rows[0].deleted).toBe(true);
+    await root();expect((await db.query('select * from auth.users where id=$1',[target])).rows).toHaveLength(0);expect((await db.query('select * from auth.sessions where user_id=$1',[target])).rows).toHaveLength(0);expect((await db.query('select * from public.partner_accounts where user_id=$1',[target])).rows).toHaveLength(0);expect((await db.query('select * from public.partner_submissions where user_id=$1',[target])).rows).toHaveLength(0);
+    expect((await db.query('select * from public.stores where id=$1',[savedListing])).rows).toHaveLength(1);const photos=await db.query<{name:string;owner:string|null;owner_id:string|null}>("select name,owner,owner_id from storage.objects where name in ('partners/photo.webp','legacy-photo.webp','other-photo.webp') order by name");expect(photos.rows).toHaveLength(3);expect(photos.rows.filter(row=>row.name!=='other-photo.webp').every(row=>row.owner===null&&row.owner_id===null)).toBe(true);expect(photos.rows.find(row=>row.name==='other-photo.webp')?.owner_id).toBe(other);
+  });
+  it('allows a retry after a lost successful response',async()=>{
+    await asUser('','service_role');expect((await db.query<{deleted:boolean}>('select public.delete_partner_auth_user($1) as deleted',[target])).rows[0].deleted).toBe(false);
+  });
+  it('rolls back the photo ownership change if Auth deletion fails',async()=>{
+    await root();await db.query("insert into public.partner_accounts(user_id,listing_kind,must_change_password) values ($1,'stores',false)",[failedTarget]);await db.query("insert into storage.objects(bucket_id,name,owner_id,owner) values ('catalog','blocked-photo.webp',$1,$2)",[failedTarget,failedTarget]);
+    await db.exec('create table public.protected_reference(user_id uuid references auth.users(id))');await db.query('insert into public.protected_reference(user_id) values ($1)',[failedTarget]);await asUser('','service_role');await expect(db.query('select public.delete_partner_auth_user($1)',[failedTarget])).rejects.toThrow('foreign key');
+    await root();expect((await db.query<{owner_id:string}>("select owner_id from storage.objects where name='blocked-photo.webp'")).rows[0].owner_id).toBe(failedTarget);expect((await db.query('select * from public.partner_accounts where user_id=$1',[failedTarget])).rows).toHaveLength(1);
   });
 });

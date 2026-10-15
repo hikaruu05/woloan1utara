@@ -17,6 +17,7 @@ import {
   Package,
   Eye,
   Sparkles,
+  Shapes,
 } from "lucide-react";
 
 interface UMKMPageProps {
@@ -45,6 +46,7 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
     { id: "kuliner", label: "Kuliner & Oleh-Oleh", icon: Utensils },
     { id: "pertanian", label: "Pertanian, Kopi & Bunga", icon: Flower2 },
     { id: "jasa", label: "Jasa & Pertukangan", icon: Sparkles },
+    { id: "lainnya", label: "Lainnya", icon: Shapes },
   ];
 
   // Filtered stores
@@ -207,6 +209,8 @@ export const UMKMPage: React.FC<UMKMPageProps> = ({
               return (
                 <button
                   key={cat.id}
+                  type="button"
+                  aria-pressed={isSelected}
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                     isSelected

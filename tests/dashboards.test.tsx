@@ -13,7 +13,7 @@ const listing={id:'store',kind:'stores',payload,updatedAt:'2026-10-15T00:00:00Z'
 beforeEach(()=>{
   localStorage.clear();
   Object.keys(data).forEach(key=>delete data[key]);
-  Object.assign(data,{accountId:'test-account',authLoading:false,isAdmin:false,isPartner:false,dashboardError:'',adminLoading:false,adminListings:[],partnerAccounts:[],partnerSubmissions:[],partnerListing:null,partnerListingKind:'stores',partnerMustChangePassword:false,refreshDashboard:vi.fn(),showToast:vi.fn(),logoutAdmin:vi.fn(),loginAdmin:vi.fn(),loginPartner:vi.fn(),saveListing:vi.fn().mockResolvedValue('saved'),submitPartnerListing:vi.fn().mockResolvedValue(undefined),uploadImage:vi.fn(),uploadPartnerImage:vi.fn()});
+  Object.assign(data,{accountId:'test-account',authLoading:false,isAdmin:false,isPartner:false,dashboardError:'',adminLoading:false,adminListings:[],partnerAccounts:[],partnerSubmissions:[],partnerListing:null,partnerListingKind:'stores',partnerMustChangePassword:false,refreshDashboard:vi.fn(),showToast:vi.fn(),deletePartnerAccount:vi.fn(),logoutAdmin:vi.fn(),loginAdmin:vi.fn(),loginPartner:vi.fn(),saveListing:vi.fn().mockResolvedValue('saved'),submitPartnerListing:vi.fn().mockResolvedValue(undefined),uploadImage:vi.fn(),uploadPartnerImage:vi.fn()});
 });
 describe('admin editor',()=>{
   it('resets status and products when switching catalogs',async()=>{

@@ -69,3 +69,19 @@ Untuk proyek yang sudah memakai skema mitra saat ini, terapkan `supabase/migrati
 Formulir listing admin dan mitra menyimpan isian otomatis di `localStorage` browser. Draf dipisahkan per akun, peran, jenis katalog, dan listing; admin juga melanjutkan editor listing yang terakhir dibuka. Draf mencakup produk, tautan lokasi, dan URL foto yang sudah selesai diunggah. Login, kata sandi, dan file foto yang masih diunggah tidak disimpan sebagai draf. Gunakan browser dan perangkat yang sama; menghapus data situs akan menghapus draf lokal.
 
 Draf baru dihapus setelah penyimpanan/pengiriman berhasil atau lewat **Hapus draf di browser**. Jika server memiliki versi yang lebih baru, versi server ditampilkan terlebih dahulu dengan pilihan **Pulihkan draf lama**. Pengajuan yang menunggu pemeriksaan tetap terkunci. Draf lokal tidak diterbitkan atau dikirim otomatis. Bila penyimpanan browser gagal, formulir memberi peringatan dan tetap mempertahankan isian dalam memori halaman. Fitur draf otomatis ini hanya memerlukan deployment frontend; tidak ada perubahan database tambahan.
+
+### Pencarian dan halaman akun mitra
+
+Daftar **Akun mitra dan tautan listing** menampilkan 10 akun per halaman. Cari menggunakan username, nama listing/usaha, nama pemilik/pengrajin, atau jenis katalog. Filter **Terhubung ke listing** menampilkan akun bertaut, sedangkan **Tanpa tautan listing** mencakup akun baru dan akun yang tautannya sudah dicabut.
+
+**Cabut tautan listing** mempertahankan akun login dan data listing; hanya hubungan keduanya yang dilepas. Jika data listing juga ingin dihapus, gunakan pengelolaan katalog setelah tautan dicabut. Pencabutan tautan bukan penghapusan akun login. Fitur pencarian, filter, dan halaman ini hanya memerlukan pembaruan frontend.
+
+### Menghapus akun login mitra
+
+Setelah **Cabut tautan listing**, tombol **Hapus akun mitra** menjadi aktif. Admin harus mengonfirmasi penghapusan permanen. Akun Auth dan akses mitra dihapus; listing dan berkas foto tetap tersimpan. Penghapusan diblokir selama listing masih tertaut, untuk akun administrator, dan untuk akun yang sedang dipakai. Kegagalan transaksi mempertahankan akun serta kepemilikan foto agar operasi dapat dicoba ulang.
+
+Terapkan `supabase/migrations/202610150002_delete_partner_account.sql` (atau skema lengkap untuk instalasi baru), deploy ulang `create-partner-account`, lalu deploy frontend. Fungsi database hanya dapat dipanggil oleh `service_role` setelah fungsi Edge memeriksa sesi dan hak admin. Foto katalog dipertahankan dengan melepas kepemilikan akun sebelum penghapusan Auth dalam satu transaksi. Dokumentasi acuan: [Supabase User Management](https://supabase.com/docs/guides/auth/managing-user-data) dan [Storage Ownership](https://supabase.com/docs/guides/storage/security/ownership). Tidak ada akun produksi yang dihapus dalam pengujian lokal.
+
+Konfirmasi penghapusan ditampilkan dalam dialog halaman. Progres dan pesan gagal tetap terlihat di dalam dialog; kegagalan tidak menghilangkan akun dari daftar. Permintaan penghapusan dibatasi 30 detik. Jika waktu habis atau koneksi putus, gunakan **Muat ulang data** untuk memeriksa apakah akun sudah dihapus sebelum mencoba lagi. Pesan tentang fungsi lama atau migrasi belum tersedia berarti SQL dan/atau fungsi Edge perlu diterapkan; pembaruan frontend saja tidak cukup.
+
+Jalankan `npm test` dan `npm run build` untuk verifikasi lokal. Tes integrasi penghapusan menghubungkan request frontend, handler Edge yang sebenarnya, dan transaksi SQL pada PostgreSQL lokal/WASM; transport SDK dan identitas Auth disimulasikan. Tes tersebut tidak memverifikasi deployment Supabase, gateway JWT, atau konfigurasi produksi. Pratinjau lokal `node tests/serve-browser.mjs` dengan `tests/browser.html?accounts-demo=1#/admin` menguji antarmuka memakai akun dummy; tambahkan `&delete-error=1` sebelum `#/admin` untuk mencoba tampilan kegagalan.

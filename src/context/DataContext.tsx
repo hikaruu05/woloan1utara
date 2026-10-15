@@ -23,6 +23,7 @@ import {
   uploadPartnerListingImage,
   createPartnerAccount as createRemotePartnerAccount,
   unlinkPartnerAccount as unlinkRemotePartnerAccount,
+  deletePartnerAccount as deleteRemotePartnerAccount,
   changePartnerPassword as changeRemotePartnerPassword,
   isSupabaseConfigured,
   readSavedSession,
@@ -73,6 +74,7 @@ interface DataContextType {
   reviewSubmission: (id: string, decision: "approve" | "reject", note?: string) => Promise<void>;
   createPartnerAccount: (username: string, kind: ListingKind, temporaryPassword: string) => Promise<"created" | "reset">;
   unlinkPartnerAccount: (kind: ListingKind, listingId: string) => Promise<void>;
+  deletePartnerAccount: (userId: string) => Promise<void>;
   changePartnerPassword: (newPassword: string) => Promise<void>;
   uploadPartnerImage: (file: File) => Promise<string>;
   saveListing: (
@@ -401,6 +403,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
     showToast("Tautan listing dicabut", "Akun mitra tetap aktif dan dapat membuat listing baru dengan jenis katalog yang sama.", "info");
   };
 
+  const deletePartnerAccount = async (userId: string) => {
+    if (!isAdmin) throw new Error("Hanya petugas yang dapat menghapus akun mitra.");
+    const account = partnerAccounts.find(item => item.user_id === userId);
+    if (!account) throw new Error("Akun mitra tidak ditemukan. Muat ulang daftar.");
+    if (account.listing_id) throw new Error("Cabut tautan listing sebelum menghapus akun mitra.");
+    const activeSession = await currentSession();
+    if (userId === activeSession.user.id) throw new Error("Akun yang sedang Anda gunakan tidak dapat dihapus.");
+    await deleteRemotePartnerAccount(activeSession, userId);
+    setPartnerAccounts(previous => previous.filter(item => item.user_id !== userId));
+    setPartnerSubmissions(previous => previous.filter(item => item.user_id !== userId));
+    showToast("Akun mitra dihapus", "Akun login telah dihapus. Data listing dan foto tetap tersimpan.", "info");
+  };
+
   const changePartnerPassword = async (newPassword: string) => {
     if (!isPartner || !partnerMustChangePassword) throw new Error("Akun ini tidak memerlukan penggantian kata sandi sementara.");
     await changeRemotePartnerPassword(await currentSession(), newPassword);
@@ -532,6 +547,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({
         reviewSubmission,
         createPartnerAccount,
         unlinkPartnerAccount,
+        deletePartnerAccount,
         changePartnerPassword,
         uploadPartnerImage,
         saveListing,
