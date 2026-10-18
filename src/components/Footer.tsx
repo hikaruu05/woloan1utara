@@ -38,7 +38,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
             <div className="pt-2 flex items-center gap-2 text-xs text-amber-300/90 font-medium">
               <GraduationCap className="w-4 h-4 text-amber-400" />
-              <span>Program KKT Mahasiswa 2026</span>
+              <span>KKT 149 Universitas Sam Ratulangi</span>
             </div>
           </div>
 
